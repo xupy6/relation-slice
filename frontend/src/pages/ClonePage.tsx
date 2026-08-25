@@ -1,9 +1,12 @@
 import {
   Bot,
   BrainCircuit,
+  Clock3,
+  History,
   MessageCircle,
   Send,
   Sparkles,
+  Trash2,
   UploadCloud,
   UserRound,
   X,
@@ -11,7 +14,7 @@ import {
 import { type ChangeEvent, type DragEvent, type FormEvent, useState } from 'react'
 
 import { GlassButton, GlassCard, LoadingIndicator } from '../components'
-import type { CloneMessage, CloneProfile, CloneStatus } from '../types'
+import type { CloneHistoryItem, CloneMessage, CloneProfile, CloneStatus } from '../types'
 
 type ClonePageProps = {
   activePanel: 'upload' | 'chat'
@@ -21,11 +24,14 @@ type ClonePageProps = {
   messageCount: number
   profile: CloneProfile | null
   status: CloneStatus
+  history: CloneHistoryItem[]
   uploadProgress: number
   onClearFiles: () => void
+  onClearHistory: () => void
   onDistill: () => void
   onFilesSelected: (files?: File[]) => void
   onSend: (message: string) => void
+  onSelectHistory: (item: CloneHistoryItem) => void
 }
 
 const COPY = {
@@ -51,6 +57,9 @@ const COPY = {
   messageCount: '\u6d88\u606f\u6570',
   noProfile: '\u8fd8\u6ca1\u6709\u751f\u6210\u753b\u50cf',
   simulationNote: '\u8fd9\u662f AI \u6a21\u62df\u5bf9\u8bdd\uff0c\u4e0d\u4ee3\u8868\u771f\u4eba\u672c\u4eba\u3002',
+  historyTitle: '\u514b\u9686\u5386\u53f2',
+  emptyHistory: '\u84b8\u998f\u5b8c\u6210\u540e\uff0c\u514b\u9686\u5bf9\u8bdd\u4f1a\u4fdd\u5b58\u5728\u8fd9\u91cc\u3002',
+  clearHistory: '\u6e05\u7a7a',
 }
 
 function ClonePage({
@@ -61,11 +70,14 @@ function ClonePage({
   messageCount,
   profile,
   status,
+  history,
   uploadProgress,
   onClearFiles,
+  onClearHistory,
   onDistill,
   onFilesSelected,
   onSend,
+  onSelectHistory,
 }: ClonePageProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [draft, setDraft] = useState('')
@@ -220,6 +232,8 @@ function ClonePage({
             </div>
           )}
         </GlassCard>
+
+        <CloneHistoryPanel history={history} onClearHistory={onClearHistory} onSelectHistory={onSelectHistory} />
       </div>
 
       {activePanel === 'chat' ? (
@@ -286,6 +300,73 @@ function ClonePage({
   )
 }
 
+function CloneHistoryPanel({
+  history,
+  onClearHistory,
+  onSelectHistory,
+}: {
+  history: CloneHistoryItem[]
+  onClearHistory: () => void
+  onSelectHistory: (item: CloneHistoryItem) => void
+}) {
+  return (
+    <GlassCard className="apple-panel p-6 sm:p-7">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-white/55 text-[#5856d6] shadow-soft dark:bg-white/10">
+            <History size={19} strokeWidth={1.8} />
+          </span>
+          <h2 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{COPY.historyTitle}</h2>
+        </div>
+        <button
+          type="button"
+          className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.42] text-[rgb(var(--text-muted))] shadow-soft transition hover:bg-white/[0.62] hover:text-[#ff3b30] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white/[0.08]"
+          aria-label={COPY.clearHistory}
+          title={COPY.clearHistory}
+          disabled={!history.length}
+          onClick={onClearHistory}
+        >
+          <Trash2 size={17} strokeWidth={1.8} />
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {history.length ? (
+          history.slice(0, 5).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="w-full rounded-[20px] bg-white/[0.32] p-4 text-left transition hover:bg-white/[0.5] dark:bg-white/[0.06] dark:hover:bg-white/[0.1]"
+              onClick={() => onSelectHistory(item)}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[rgb(var(--text-primary))]">
+                    {item.profile.clone_name || item.profile.target_sender || item.fileName}
+                  </p>
+                  <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">
+                    {item.messageCount} messages - {formatDate(item.createdAt)}
+                  </p>
+                </div>
+                <span className="rounded-full bg-white/[0.45] px-3 py-1 text-xs font-semibold text-[#5856d6] dark:bg-white/[0.08]">
+                  {item.messages.length}
+                </span>
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="rounded-[20px] bg-white/[0.28] p-4 dark:bg-white/[0.06]">
+            <div className="flex items-start gap-3">
+              <Clock3 className="mt-0.5 flex-none text-[#8e8e93]" size={18} strokeWidth={1.8} />
+              <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">{COPY.emptyHistory}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </GlassCard>
+  )
+}
+
 function getSelectedFileLabel(files: File[]) {
   if (!files.length) {
     return ''
@@ -309,6 +390,17 @@ function getStatusLabel(status: CloneStatus, fileCount: number) {
     return COPY.chatting
   }
   return fileCount ? COPY.ready : COPY.idle
+}
+
+function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(
+    date.getMinutes(),
+  ).padStart(2, '0')}`
 }
 
 export default ClonePage

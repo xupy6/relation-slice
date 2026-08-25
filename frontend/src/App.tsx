@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward } from 'lucide-react'
+import { ExternalLink, Gift, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react'
 
 import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, uploadChatFiles } from './api'
 import ClonePage from './pages/ClonePage'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
-import { loadHistory, saveHistory } from './storage'
-import type { AnalysisHistoryItem, CloneMessage, CloneProfile, CloneStatus, FinalReport, WorkStatus } from './types'
+import { loadCloneHistory, loadHistory, saveCloneHistory, saveHistory } from './storage'
+import type {
+  AnalysisHistoryItem,
+  CloneHistoryItem,
+  CloneMessage,
+  CloneProfile,
+  CloneStatus,
+  FinalReport,
+  WorkStatus,
+} from './types'
 
 type AppView = 'upload' | 'result' | 'cloneUpload' | 'cloneChat'
 type NavGroup = 'relation' | 'clone'
@@ -49,6 +57,8 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [messageCount, setMessageCount] = useState(0)
   const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => loadHistory())
+  const [cloneHistory, setCloneHistory] = useState<CloneHistoryItem[]>(() => loadCloneHistory())
+  const [activeCloneHistoryId, setActiveCloneHistoryId] = useState<string | null>(null)
   const [cloneProfile, setCloneProfile] = useState<CloneProfile | null>(null)
   const [cloneMessages, setCloneMessages] = useState<CloneMessage[]>([])
   const [cloneStatus, setCloneStatus] = useState<CloneStatus>('idle')
@@ -66,6 +76,10 @@ function App() {
   useEffect(() => {
     saveHistory(history)
   }, [history])
+
+  useEffect(() => {
+    saveCloneHistory(cloneHistory)
+  }, [cloneHistory])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -89,6 +103,7 @@ function App() {
     setError(null)
     setCloneProfile(null)
     setCloneMessages([])
+    setActiveCloneHistoryId(null)
     setCloneStatus('idle')
     setCloneError(null)
     setUploadProgress(0)
@@ -103,6 +118,7 @@ function App() {
     setCloneError(null)
     setCloneProfile(null)
     setCloneMessages([])
+    setActiveCloneHistoryId(null)
     setStatus('idle')
     setCloneStatus('idle')
   }
@@ -178,8 +194,18 @@ function App() {
 
       setCloneStatus('distilling')
       const profile = await distillClone(upload.chat_messages)
+      const item: CloneHistoryItem = {
+        id: `${Date.now()}-${files.map((item) => item.name).join('-')}`,
+        fileName: files.length === 1 ? files[0].name : `${files.length} files`,
+        messageCount: upload.chat_messages.length,
+        createdAt: new Date().toISOString(),
+        profile,
+        messages: [],
+      }
       setCloneProfile(profile)
       setCloneMessages([])
+      setActiveCloneHistoryId(item.id)
+      setCloneHistory((current) => [item, ...current].slice(0, 20))
       setCloneStatus('idle')
       setUploadProgress(100)
       setView('cloneChat')
@@ -249,12 +275,33 @@ function App() {
 
     try {
       const response = await chatWithClone(cloneProfile, message, nextConversation)
-      setCloneMessages([...nextConversation, { role: 'clone', content: response.reply }])
+      const completedConversation: CloneMessage[] = [...nextConversation, { role: 'clone', content: response.reply }]
+      setCloneMessages(completedConversation)
+      setCloneHistory((current) =>
+        current.map((item) =>
+          item.id === activeCloneHistoryId ? { ...item, messages: completedConversation, profile: cloneProfile } : item,
+        ),
+      )
       setCloneStatus('idle')
     } catch (nextError) {
       setCloneError(getApiErrorMessage(nextError))
       setCloneStatus('error')
     }
+  }
+
+  function handleSelectCloneHistory(item: CloneHistoryItem) {
+    setCloneProfile(item.profile)
+    setCloneMessages(item.messages)
+    setActiveCloneHistoryId(item.id)
+    setMessageCount(item.messageCount)
+    setCloneError(null)
+    setCloneStatus('idle')
+    setView('cloneChat')
+  }
+
+  function handleClearCloneHistory() {
+    setCloneHistory([])
+    setActiveCloneHistoryId(null)
   }
 
   const activeNavGroup: NavGroup = isRelationView(view) ? 'relation' : 'clone'
@@ -420,11 +467,14 @@ function App() {
             messageCount={messageCount}
             profile={cloneProfile}
             status={cloneStatus}
+            history={cloneHistory}
             uploadProgress={uploadProgress}
             onClearFiles={handleClearFiles}
+            onClearHistory={handleClearCloneHistory}
             onDistill={handleDistillClone}
             onFilesSelected={handleFilesSelected}
             onSend={handleCloneSend}
+            onSelectHistory={handleSelectCloneHistory}
           />
         ) : (
           <ResultPage report={report} onReset={handleReset} />
@@ -462,7 +512,7 @@ function App() {
                 setIsMoreOpen(false)
               }}
             >
-              <span className="grid h-4 w-4 place-items-center rounded-full bg-[#ff2d55]/12 text-xs text-[#ff2d55]">¥</span>
+              <Gift size={16} strokeWidth={1.8} />
               {COPY.reward}
             </button>
           </div>
@@ -485,7 +535,7 @@ function App() {
                 aria-label={COPY.close}
                 onClick={() => setOpenMorePanel(null)}
               >
-                ×
+                <X size={18} strokeWidth={1.8} />
               </button>
             </div>
 

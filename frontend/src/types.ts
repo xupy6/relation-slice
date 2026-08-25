@@ -102,6 +102,15 @@ export type CloneMessage = {
   content: string
 }
 
+export type CloneHistoryItem = {
+  id: string
+  fileName: string
+  messageCount: number
+  createdAt: string
+  profile: CloneProfile
+  messages: CloneMessage[]
+}
+
 export type AnalysisHistoryItem = {
   id: string
   fileName: string
