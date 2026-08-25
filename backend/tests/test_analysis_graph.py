@@ -6,6 +6,7 @@ from app.agents.common import set_llm_factory
 from app.graph import run_analysis
 from app.main import app
 from app.parser import ChatMessage
+from app.rate_limit import limiter
 from fastapi.testclient import TestClient
 
 
@@ -35,9 +36,8 @@ class FakeDeepSeek:
                             "emotionality": 0.5,
                             "playfulness": 0.7,
                         },
-                        "keywords_style": ["轻松", "直接"],
-                    },
-                    ensure_ascii=False,
+                        "keywords_style": ["relaxed", "direct"],
+                    }
                 )
             )
         if "emotion recognition agent" in system_text:
@@ -66,37 +66,36 @@ class FakeDeepSeek:
             return FakeResponse(
                 json.dumps(
                     {
-                        "relationship_type": "安全型",
-                        "suggestions": ["增加共同活动", "保持稳定回应"],
+                        "relationship_type": "\u5b89\u5168\u578b",
+                        "suggestions": ["shared activities", "steady replies"],
                         "confidence": 0.8,
-                    },
-                    ensure_ascii=False,
+                    }
                 )
             )
         return FakeResponse(
             json.dumps(
                 {
                     "intimacy_score": 85,
-                    "summary_text": "互动稳定，表达自然。",
-                    "fun_tags": ["灵魂共鸣型", "斗嘴冤家型"],
+                    "summary_text": "The interaction is steady and natural.",
+                    "fun_tags": ["soul sync", "playful banter"],
                     "all_reports": {},
-                },
-                ensure_ascii=False,
+                }
             )
         )
 
 
 def sample_messages():
     return [
-        ChatMessage(sender="Alice", content="今天一起吃饭吗？", timestamp=datetime(2026, 8, 25, 12, 0, 0)),
-        ChatMessage(sender="Bob", content="好呀，我想吃火锅", timestamp=datetime(2026, 8, 25, 12, 1, 0)),
-        ChatMessage(sender="Alice", content="那我订位", timestamp=datetime(2026, 8, 25, 12, 2, 0)),
+        ChatMessage(sender="Alice", content="Lunch today?", timestamp=datetime(2026, 8, 25, 12, 0, 0)),
+        ChatMessage(sender="Bob", content="Sure, hotpot sounds good.", timestamp=datetime(2026, 8, 25, 12, 1, 0)),
+        ChatMessage(sender="Alice", content="I'll book a table.", timestamp=datetime(2026, 8, 25, 12, 2, 0)),
     ]
 
 
 class AnalysisGraphTest(unittest.TestCase):
     def setUp(self):
         set_llm_factory(FakeDeepSeek)
+        limiter.reset()
 
     def tearDown(self):
         set_llm_factory(None)
@@ -105,7 +104,7 @@ class AnalysisGraphTest(unittest.TestCase):
         report = run_analysis(sample_messages())
 
         self.assertEqual(report["intimacy_score"], 85)
-        self.assertEqual(report["all_reports"]["relation_report"]["relationship_type"], "安全型")
+        self.assertEqual(report["all_reports"]["relation_report"]["relationship_type"], "\u5b89\u5168\u578b")
 
     def test_analyze_endpoint_returns_report(self):
         client = TestClient(app)
@@ -115,7 +114,29 @@ class AnalysisGraphTest(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["intimacy_score"], 85)
+        payload = response.json()
+        self.assertEqual(payload["code"], 0)
+        self.assertEqual(payload["data"]["intimacy_score"], 85)
+
+    def test_analyze_endpoint_returns_standardized_error(self):
+        client = TestClient(app)
+        response = client.post("/api/analyze", json={"chat_messages": []})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["code"], 400)
+        self.assertIn("chat_messages cannot be empty", response.json()["message"])
+
+    def test_analyze_endpoint_rate_limit(self):
+        client = TestClient(app)
+        body = {"chat_messages": [message.model_dump(mode="json") for message in sample_messages()]}
+
+        for _ in range(10):
+            response = client.post("/api/analyze", json=body)
+            self.assertEqual(response.status_code, 200)
+
+        response = client.post("/api/analyze", json=body)
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.json()["code"], 429)
 
 
 if __name__ == "__main__":
