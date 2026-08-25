@@ -326,16 +326,18 @@ button {
   content: '';
   border-radius: 999px;
   padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    rgba(255, 255, 255, 0.18),
-    rgba(255, 88, 146, 0.9),
-    rgba(255, 214, 92, 0.82),
-    rgba(78, 214, 118, 0.78),
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 88, 146, 0.86),
+    rgba(255, 214, 92, 0.78),
+    rgba(78, 214, 118, 0.76),
     rgba(90, 200, 250, 0.78),
     rgba(190, 128, 255, 0.74),
-    rgba(255, 255, 255, 0.18)
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 88, 146, 0.86)
   );
+  background-size: 320% 100%;
   filter: saturate(118%);
   opacity: 0;
   -webkit-mask:
@@ -351,44 +353,12 @@ button {
 }
 
 .music-box-player::after {
-  position: absolute;
-  inset: -5px;
-  z-index: 0;
-  content: '';
-  border-radius: 999px;
-  padding: 3px;
-  background: conic-gradient(
-    from 20deg,
-    transparent 0deg,
-    transparent 248deg,
-    rgba(255, 255, 255, 0.1) 258deg,
-    rgba(255, 255, 255, 0.92) 278deg,
-    rgba(255, 214, 231, 0.82) 292deg,
-    transparent 314deg,
-    transparent 360deg
-  );
-  filter: blur(0.5px);
-  opacity: 0;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  transition: opacity 220ms ease;
+  display: none;
 }
 
 .music-box-playing::before {
   opacity: 0.9;
-  animation: musicRibbon 3.8s linear infinite, musicHue 6.6s ease-in-out infinite;
-}
-
-.music-box-playing::after {
-  opacity: 0.82;
-  animation: musicRibbonSpark 1.85s linear infinite;
+  animation: musicBorderShift 4.8s ease-in-out infinite, musicHue 7.2s ease-in-out infinite;
 }
 
 .music-box-player > * {
@@ -471,18 +441,6 @@ button {
   }
 }
 
-@keyframes musicRibbon {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes musicRibbonSpark {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes musicHue {
   0%,
   100% {
@@ -491,6 +449,17 @@ button {
 
   50% {
     filter: saturate(132%) hue-rotate(28deg);
+  }
+}
+
+@keyframes musicBorderShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
   }
 }
 
