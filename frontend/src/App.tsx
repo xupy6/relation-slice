@@ -32,7 +32,7 @@ function App() {
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(135deg,rgba(236,246,255,0.92),rgba(255,255,255,0.72)_42%,rgba(255,241,237,0.76))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.96),rgba(21,26,38,0.86)_48%,rgba(42,31,34,0.72))]" />
 
       <header className="sticky top-0 z-20 border-b border-white/40 bg-white/[0.45] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
-        <nav className="mx-auto flex h-16 max-w-[800px] items-center justify-between px-5">
+        <nav className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-5">
           <button
             type="button"
             className="flex items-center gap-3 text-left"
@@ -67,7 +67,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[800px] items-start px-4 py-6 sm:px-5 sm:py-10 md:items-center">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1120px] items-start px-4 py-6 sm:px-5 sm:py-10 md:items-center">
         {view === 'upload' ? (
           <UploadPage onAnalysisComplete={handleAnalysisComplete} />
         ) : (
