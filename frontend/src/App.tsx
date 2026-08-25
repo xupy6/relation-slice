@@ -10,11 +10,13 @@ import type { AnalysisHistoryItem, CloneMessage, CloneProfile, CloneStatus, Fina
 
 type AppView = 'upload' | 'result' | 'cloneUpload' | 'cloneChat'
 type NavGroup = 'relation' | 'clone'
+type RelationSubView = 'upload' | 'result'
+type CloneSubView = 'cloneUpload' | 'cloneChat'
 
 const MUSIC_TRACKS = [
-  { title: 'TA Theme', src: '/music/ta-music.wav' },
-  { title: 'Quiet Signal', src: '/music/quiet-signal.wav' },
-  { title: 'Soft Return', src: '/music/soft-return.wav' },
+  { title: 'Sunny Day', src: '/music/%E6%99%B4%E5%A4%A9-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3' },
+  { title: 'Love Confession', src: '/music/%E5%91%8A%E7%99%BD%E6%B0%94%E7%90%83-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3' },
+  { title: 'Cold City', src: '/music/%E4%BB%BB%E7%84%B6%2B-%2B%E5%87%89%E5%9F%8E.mp3' },
 ]
 
 const COPY = {
@@ -57,6 +59,8 @@ function App() {
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const [openMorePanel, setOpenMorePanel] = useState<'contact' | 'reward' | null>(null)
   const [hoveredNavGroup, setHoveredNavGroup] = useState<NavGroup | null>(null)
+  const [hoveredRelationSubView, setHoveredRelationSubView] = useState<RelationSubView | null>(null)
+  const [hoveredCloneSubView, setHoveredCloneSubView] = useState<CloneSubView | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -255,13 +259,15 @@ function App() {
 
   const activeNavGroup: NavGroup = isRelationView(view) ? 'relation' : 'clone'
   const liquidNavGroup = hoveredNavGroup ?? activeNavGroup
+  const relationSubView = hoveredRelationSubView ?? (view === 'result' ? 'result' : 'upload')
+  const cloneSubView = hoveredCloneSubView ?? (view === 'cloneChat' ? 'cloneChat' : 'cloneUpload')
   const currentTrack = MUSIC_TRACKS[musicTrackIndex]
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--app-bg))] text-[rgb(var(--text-primary))]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.92),transparent_28%),linear-gradient(135deg,rgba(238,247,255,0.96),rgba(255,255,255,0.78)_42%,rgba(255,245,242,0.82))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.98),rgba(21,26,38,0.88)_48%,rgba(42,31,34,0.74))]" />
 
-      <header className="sticky top-0 z-20 border-b border-white/50 bg-white/[0.62] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
+      <header className="sticky top-0 z-20 border-b border-white/55 bg-[linear-gradient(90deg,rgba(255,255,255,0.7),rgba(238,247,255,0.64)_36%,rgba(255,245,250,0.58)_72%,rgba(255,255,255,0.7))] backdrop-blur-2xl dark:border-white/10 dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.08),rgba(92,140,255,0.1)_44%,rgba(255,120,170,0.08))]">
         <nav className="relative flex h-14 w-full items-center justify-between px-4 sm:px-6">
           <div className="ml-2 flex items-center gap-6">
             <button
@@ -276,7 +282,7 @@ function App() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
               </span>
             </button>
-            <div className="music-box-player" title={COPY.musicBox}>
+            <div className="music-box-player" title={`${COPY.musicBox}: ${currentTrack.title}`}>
               <button type="button" className="music-control" aria-label={COPY.previousTrack} onClick={handlePreviousTrack}>
                 <SkipBack size={12} fill="currentColor" />
               </button>
@@ -321,60 +327,70 @@ function App() {
           <div
             className="nav-shell"
             data-mode={activeNavGroup}
-            onMouseLeave={() => setHoveredNavGroup(null)}
+            onMouseLeave={() => {
+              setHoveredNavGroup(null)
+              setHoveredRelationSubView(null)
+              setHoveredCloneSubView(null)
+            }}
           >
             <span className={`nav-liquid ${liquidNavGroup === 'clone' ? 'nav-liquid-clone' : 'nav-liquid-relation'}`} />
             <button
               type="button"
-              className={isRelationView(view) ? 'nav-pill-active' : 'nav-pill'}
+              className={isRelationView(view) ? 'nav-pill nav-main-pill nav-pill-active' : 'nav-pill nav-main-pill'}
               onClick={() => setView('upload')}
               onMouseEnter={() => setHoveredNavGroup('relation')}
             >
               {COPY.relationSlice}
             </button>
             {isRelationView(view) ? (
-              <>
+              <div className="nav-sub-shell" onMouseLeave={() => setHoveredRelationSubView(null)}>
+                <span className={`nav-sub-liquid ${relationSubView === 'result' ? 'nav-sub-liquid-right' : ''}`} />
                 <button
                   type="button"
-                  className={view === 'upload' ? 'nav-pill-active' : 'nav-pill'}
+                  className={view === 'upload' ? 'nav-pill nav-sub-pill nav-pill-active' : 'nav-pill nav-sub-pill'}
                   onClick={() => setView('upload')}
+                  onMouseEnter={() => setHoveredRelationSubView('upload')}
                 >
                   {COPY.upload}
                 </button>
                 <button
                   type="button"
-                  className={view === 'result' ? 'nav-pill-active' : 'nav-pill'}
+                  className={view === 'result' ? 'nav-pill nav-sub-pill nav-pill-active' : 'nav-pill nav-sub-pill'}
                   onClick={() => setView('result')}
+                  onMouseEnter={() => setHoveredRelationSubView('result')}
                 >
                   {COPY.result}
                 </button>
-              </>
+              </div>
             ) : null}
             <button
               type="button"
-              className={isCloneView(view) ? 'nav-pill-active' : 'nav-pill'}
+              className={isCloneView(view) ? 'nav-pill nav-main-pill nav-pill-active' : 'nav-pill nav-main-pill'}
               onClick={() => setView('cloneUpload')}
               onMouseEnter={() => setHoveredNavGroup('clone')}
             >
               {COPY.clone}
             </button>
             {isCloneView(view) ? (
-              <>
+              <div className="nav-sub-shell" onMouseLeave={() => setHoveredCloneSubView(null)}>
+                <span className={`nav-sub-liquid ${cloneSubView === 'cloneChat' ? 'nav-sub-liquid-right' : ''}`} />
                 <button
                   type="button"
-                  className={view === 'cloneUpload' ? 'nav-pill-active' : 'nav-pill'}
+                  className={view === 'cloneUpload' ? 'nav-pill nav-sub-pill nav-pill-active' : 'nav-pill nav-sub-pill'}
                   onClick={() => setView('cloneUpload')}
+                  onMouseEnter={() => setHoveredCloneSubView('cloneUpload')}
                 >
                   {COPY.upload}
                 </button>
                 <button
                   type="button"
-                  className={view === 'cloneChat' ? 'nav-pill-active' : 'nav-pill'}
+                  className={view === 'cloneChat' ? 'nav-pill nav-sub-pill nav-pill-active' : 'nav-pill nav-sub-pill'}
                   onClick={() => setView('cloneChat')}
+                  onMouseEnter={() => setHoveredCloneSubView('cloneChat')}
                 >
                   {COPY.chat}
                 </button>
-              </>
+              </div>
             ) : null}
           </div>
         </nav>
