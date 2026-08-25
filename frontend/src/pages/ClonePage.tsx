@@ -14,6 +14,7 @@ import { GlassButton, GlassCard, LoadingIndicator } from '../components'
 import type { CloneMessage, CloneProfile, CloneStatus } from '../types'
 
 type ClonePageProps = {
+  activePanel: 'upload' | 'chat'
   error: string | null
   files: File[]
   messages: CloneMessage[]
@@ -29,7 +30,7 @@ type ClonePageProps = {
 
 const COPY = {
   eyebrow: '\u8d5b\u535a\u514b\u9686',
-  title: '\u628a\u804a\u5929\u8bb0\u5f55\u84b8\u998f\u6210\u4e00\u4e2a\u53ef\u5bf9\u8bdd\u7684 TA',
+  title: 'TA\u6765\u4e86',
   intro:
     '\u5148\u5bfc\u5165\u804a\u5929\u8bb0\u5f55\uff0c\u7cfb\u7edf\u4f1a\u63d0\u53d6\u8bed\u6c14\u3001\u60c5\u7eea\u8282\u594f\u548c\u5e38\u7528\u8868\u8fbe\uff0c\u751f\u6210\u4e00\u4e2a AI \u6a21\u62df\u4eba\u683c\u3002',
   dropTitle: '\u628a\u804a\u5929\u8bb0\u5f55\u653e\u5230\u8fd9\u91cc',
@@ -53,6 +54,7 @@ const COPY = {
 }
 
 function ClonePage({
+  activePanel,
   error,
   files,
   messages,
@@ -103,93 +105,95 @@ function ClonePage({
   }
 
   return (
-    <section className="grid w-full gap-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(420px,0.74fr)]">
+    <section className={`grid w-full gap-6 ${activePanel === 'chat' ? 'xl:grid-cols-[380px_minmax(0,1fr)]' : ''}`}>
       <div className="space-y-6">
-        <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
-          <div className="max-w-4xl space-y-4">
-            <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.eyebrow}</p>
-            <h1 className="max-w-4xl text-4xl font-semibold leading-[1.08] text-[rgb(var(--text-primary))] sm:text-5xl">
-              {COPY.title}
-            </h1>
-            <p className="max-w-3xl text-base leading-8 text-[rgb(var(--text-secondary))] sm:text-lg">{COPY.intro}</p>
-          </div>
+        {activePanel === 'upload' ? (
+          <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
+            <div className="max-w-4xl space-y-4">
+              <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.eyebrow}</p>
+              <h1 className="max-w-4xl text-4xl font-semibold leading-[1.08] text-[rgb(var(--text-primary))] sm:text-5xl">
+                {COPY.title}
+              </h1>
+              <p className="max-w-3xl text-base leading-8 text-[rgb(var(--text-secondary))] sm:text-lg">{COPY.intro}</p>
+            </div>
 
-          <div
-            className={`mt-8 rounded-[28px] border border-dashed p-6 backdrop-blur-2xl transition ${
-              isDragging
-                ? 'border-[#007aff]/80 bg-[#007aff]/10'
-                : 'border-white/70 bg-white/[0.34] dark:border-white/[0.12] dark:bg-white/[0.06]'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-          >
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-4">
-                <span className="grid h-14 w-14 flex-none place-items-center rounded-[20px] bg-white/60 text-[#007aff] shadow-soft dark:bg-white/10">
-                  <BrainCircuit size={24} strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-semibold text-[rgb(var(--text-primary))]" title={selectedFileLabel}>
-                    {files.length ? selectedFileLabel : COPY.dropTitle}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">
-                    {files.length ? `${files.length} files - ${COPY.fileHint}` : COPY.simulationNote}
-                  </p>
+            <div
+              className={`mt-8 rounded-[28px] border border-dashed p-6 backdrop-blur-2xl transition ${
+                isDragging
+                  ? 'border-[#007aff]/80 bg-[#007aff]/10'
+                  : 'border-white/70 bg-white/[0.34] dark:border-white/[0.12] dark:bg-white/[0.06]'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-4">
+                  <span className="grid h-14 w-14 flex-none place-items-center rounded-[20px] bg-white/60 text-[#007aff] shadow-soft dark:bg-white/10">
+                    <BrainCircuit size={24} strokeWidth={1.8} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-semibold text-[rgb(var(--text-primary))]" title={selectedFileLabel}>
+                      {files.length ? selectedFileLabel : COPY.dropTitle}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">
+                      {files.length ? `${files.length} files - ${COPY.fileHint}` : COPY.simulationNote}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <label className="glass-button inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-semibold">
+                    <UploadCloud size={17} strokeWidth={1.8} />
+                    {COPY.selectFiles}
+                    <input
+                      className="sr-only"
+                      type="file"
+                      multiple
+                      accept=".db,.sqlite,.sqlite3,.json,.csv,.txt"
+                      disabled={isWorking}
+                      onChange={handleInputChange}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/[0.32] px-5 text-sm font-medium text-[rgb(var(--text-secondary))] shadow-soft transition hover:bg-white/[0.5] hover:text-[#ff3b30] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white/[0.08]"
+                    disabled={!files.length || isWorking}
+                    onClick={onClearFiles}
+                  >
+                    <X size={16} strokeWidth={1.8} />
+                    {COPY.clearFiles}
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <label className="glass-button inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-semibold">
-                  <UploadCloud size={17} strokeWidth={1.8} />
-                  {COPY.selectFiles}
-                  <input
-                    className="sr-only"
-                    type="file"
-                    multiple
-                    accept=".db,.sqlite,.sqlite3,.json,.csv,.txt"
-                    disabled={isWorking}
-                    onChange={handleInputChange}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/[0.32] px-5 text-sm font-medium text-[rgb(var(--text-secondary))] shadow-soft transition hover:bg-white/[0.5] hover:text-[#ff3b30] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white/[0.08]"
-                  disabled={!files.length || isWorking}
-                  onClick={onClearFiles}
-                >
-                  <X size={16} strokeWidth={1.8} />
-                  {COPY.clearFiles}
-                </button>
+              <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/45 dark:bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300"
+                  style={{ width: `${status === 'distilling' ? 100 : uploadProgress}%` }}
+                />
               </div>
             </div>
 
-            <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/45 dark:bg-white/10">
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300"
-                style={{ width: `${status === 'distilling' ? 100 : uploadProgress}%` }}
-              />
-            </div>
-          </div>
+            {error ? (
+              <div className="mt-5 rounded-[22px] border border-[#ff9f0a]/35 bg-[#ff9f0a]/12 p-4 text-sm leading-6 text-[rgb(var(--text-secondary))]">
+                {error}
+              </div>
+            ) : null}
 
-          {error ? (
-            <div className="mt-5 rounded-[22px] border border-[#ff9f0a]/35 bg-[#ff9f0a]/12 p-4 text-sm leading-6 text-[rgb(var(--text-secondary))]">
-              {error}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <GlassButton
+                className="inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
+                disabled={!files.length || isWorking}
+                onClick={onDistill}
+              >
+                <Sparkles size={16} strokeWidth={1.8} />
+                {COPY.distill}
+              </GlassButton>
+              <LoadingIndicator label={statusLabel} />
             </div>
-          ) : null}
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <GlassButton
-              className="inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
-              disabled={!files.length || isWorking}
-              onClick={onDistill}
-            >
-              <Sparkles size={16} strokeWidth={1.8} />
-              {COPY.distill}
-            </GlassButton>
-            <LoadingIndicator label={statusLabel} />
-          </div>
-        </GlassCard>
+          </GlassCard>
+        ) : null}
 
         <GlassCard className="apple-panel p-6 sm:p-7">
           <div className="flex items-center justify-between gap-4">
@@ -226,6 +230,7 @@ function ClonePage({
         </GlassCard>
       </div>
 
+      {activePanel === 'chat' ? (
       <GlassCard className="apple-panel flex min-h-[calc(100vh-130px)] flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -284,6 +289,7 @@ function ClonePage({
           </GlassButton>
         </form>
       </GlassCard>
+      ) : null}
     </section>
   )
 }

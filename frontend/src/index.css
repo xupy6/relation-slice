@@ -127,6 +127,69 @@ button {
   box-shadow: 0 8px 22px rgba(37, 47, 70, 0.1);
 }
 
+.music-box {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 28px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.3)),
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.9), transparent 32%);
+  box-shadow:
+    0 12px 34px rgba(37, 47, 70, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.music-box:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(37, 47, 70, 0.16);
+}
+
+.music-box-disc {
+  position: absolute;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 16%, transparent 17%),
+    conic-gradient(from 40deg, #007aff, #5ac8fa, #34c759, #ffcc00, #ff2d55, #007aff);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.22);
+}
+
+.music-box-pin {
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  width: 10px;
+  height: 12px;
+  border: 2px solid rgba(18, 22, 30, 0.56);
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 8px 8px 0 0;
+  transform: rotate(12deg);
+}
+
+.music-box-active .music-box-disc {
+  animation: musicSpin 2.4s linear infinite;
+}
+
+@keyframes musicSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .liquid-loader {
   position: relative;
   display: inline-block;
@@ -204,6 +267,18 @@ button {
   .nav-pill-active {
     background: rgba(255, 255, 255, 0.16);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  }
+
+  .music-box {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.05));
+    box-shadow:
+      0 14px 36px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .music-box-pin {
+    border-color: rgba(244, 247, 251, 0.62);
   }
 
   .liquid-loader {
