@@ -287,7 +287,7 @@ function ClonePage({
             onChange={(event) => setDraft(event.target.value)}
           />
           <GlassButton
-            className="primary-gradient-button inline-flex min-h-12 w-12 items-center justify-center"
+            className="primary-gradient-button send-gradient-button inline-flex min-h-12 w-12 items-center justify-center"
             disabled={!profile || status === 'chatting' || !draft.trim()}
             type="submit"
           >

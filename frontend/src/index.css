@@ -140,30 +140,34 @@ button {
   z-index: 1;
 }
 
+.send-gradient-button {
+  background:
+    radial-gradient(circle at 22% 14%, rgba(255, 255, 255, 0.96), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(178, 218, 255, 0.82) 44%, rgba(255, 205, 223, 0.78));
+  box-shadow:
+    0 18px 42px rgba(37, 47, 70, 0.18),
+    0 0 24px rgba(0, 122, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
 .chat-room-panel {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.92), transparent 30%),
-    radial-gradient(circle at 84% 18%, rgba(255, 232, 240, 0.34), transparent 32%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(239, 247, 255, 0.38) 48%, rgba(255, 255, 255, 0.3));
+    linear-gradient(118deg, rgba(255, 255, 255, 0.8), rgba(235, 247, 255, 0.42) 36%, rgba(255, 236, 244, 0.35) 68%, rgba(255, 255, 255, 0.58)),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.55), rgba(240, 244, 250, 0.28));
+  background-size: 165% 165%, 100% 100%;
+  animation: chatRoomGradient 12s ease-in-out infinite;
 }
 
 .chat-room-panel::before {
   position: absolute;
-  inset: -35% -20%;
+  inset: 0;
   content: '';
-  background: conic-gradient(
-    from 120deg,
-    transparent,
-    rgba(255, 214, 231, 0.18),
-    rgba(216, 236, 255, 0.16),
-    rgba(235, 255, 242, 0.14),
-    transparent
-  );
-  filter: blur(18px);
-  opacity: 0.72;
-  animation: roomGlow 18s linear infinite;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.22), transparent 32%, rgba(255, 255, 255, 0.12) 66%, transparent),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 22%);
+  opacity: 0.68;
   pointer-events: none;
 }
 
@@ -463,9 +467,14 @@ button {
   }
 }
 
-@keyframes roomGlow {
-  to {
-    transform: rotate(360deg);
+@keyframes chatRoomGradient {
+  0%,
+  100% {
+    background-position: 0% 44%, 0 0;
+  }
+
+  50% {
+    background-position: 100% 56%, 0 0;
   }
 }
 
@@ -648,11 +657,21 @@ button {
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
 
+  .send-gradient-button {
+    background:
+      radial-gradient(circle at 22% 14%, rgba(255, 255, 255, 0.24), transparent 34%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(92, 160, 255, 0.2) 44%, rgba(255, 132, 180, 0.17));
+    box-shadow:
+      0 18px 42px rgba(0, 0, 0, 0.3),
+      0 0 20px rgba(92, 160, 255, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+
   .chat-room-panel {
     background:
-      radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.14), transparent 30%),
-      radial-gradient(circle at 84% 18%, rgba(255, 120, 170, 0.09), transparent 32%),
-      linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(92, 140, 255, 0.07) 48%, rgba(255, 255, 255, 0.05));
+      linear-gradient(118deg, rgba(255, 255, 255, 0.12), rgba(92, 140, 255, 0.08) 36%, rgba(255, 120, 170, 0.06) 68%, rgba(255, 255, 255, 0.08)),
+      linear-gradient(155deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    background-size: 165% 165%, 100% 100%;
   }
 
   .nav-shell {
