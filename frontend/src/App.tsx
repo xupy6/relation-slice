@@ -485,7 +485,7 @@ function App() {
       </main>
 
       <div
-        className="fixed bottom-5 left-5 z-30"
+        className="more-root fixed bottom-5 left-5 z-30"
         onMouseEnter={() => setIsMoreOpen(true)}
         onMouseLeave={() => setIsMoreOpen(false)}
       >
