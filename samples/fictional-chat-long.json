@@ -1,0 +1,256 @@
+{
+  "chat_messages": [
+    {
+      "sender": "林夏",
+      "content": "早，昨晚睡得怎么样？你昨天说有点头疼。",
+      "timestamp": "2026-08-20 08:06:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "还行，醒来的时候好多了。你居然记得。",
+      "timestamp": "2026-08-20 08:08:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "当然记得啊，你昨天语气都蔫了。",
+      "timestamp": "2026-08-20 08:09:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "被你发现了。今天早会我可能要讲方案，有点紧张。",
+      "timestamp": "2026-08-20 08:12:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "你准备得很细，别被自己的脑补吓到。讲慢一点就稳了。",
+      "timestamp": "2026-08-20 08:14:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "收到，林老师上线。",
+      "timestamp": "2026-08-20 08:15:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "下线前提醒你吃早餐。",
+      "timestamp": "2026-08-20 08:16:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "已经买了豆浆和饭团。你呢？",
+      "timestamp": "2026-08-20 08:18:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "咖啡加三明治，今天不想排队。",
+      "timestamp": "2026-08-20 08:20:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "你每次说不想排队，最后都会为了那家贝果排十分钟。",
+      "timestamp": "2026-08-20 08:22:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "不要拆穿我，我也是有形象管理的。",
+      "timestamp": "2026-08-20 08:23:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "早会讲完了，比想象中顺。",
+      "timestamp": "2026-08-20 10:36:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "看吧！我就说你可以。有没有被夸？",
+      "timestamp": "2026-08-20 10:38:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "老板说逻辑清楚，但预算部分还要补。",
+      "timestamp": "2026-08-20 10:40:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "这算正向反馈，晚上奖励一顿？",
+      "timestamp": "2026-08-20 10:41:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "你想吃什么？别又说随便。",
+      "timestamp": "2026-08-20 10:43:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "那我认真说，想吃泰餐，冬阴功那家。",
+      "timestamp": "2026-08-20 10:44:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "好，我订七点。你下班别拖太晚。",
+      "timestamp": "2026-08-20 10:46:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "尽量。今天下午要改一版页面，可能会卡。",
+      "timestamp": "2026-08-20 10:48:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "卡了就发我，我帮你看文案。",
+      "timestamp": "2026-08-20 10:49:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "你文案确实比我冷静。我写东西容易一激动就太满。",
+      "timestamp": "2026-08-20 13:32:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "你是有感染力，不是太满。只是有时候需要留白。",
+      "timestamp": "2026-08-20 13:35:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "这句话我要记下来，听起来像你会说的。",
+      "timestamp": "2026-08-20 13:36:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "像我说明版权归我。",
+      "timestamp": "2026-08-20 13:38:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "那我晚饭请你喝柠檬茶买断。",
+      "timestamp": "2026-08-20 13:39:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "成交。",
+      "timestamp": "2026-08-20 13:40:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "我可能要晚十分钟，你会介意吗？",
+      "timestamp": "2026-08-20 18:26:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "不介意，我先到附近逛一下。但你别太赶，注意路上安全。",
+      "timestamp": "2026-08-20 18:27:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "谢谢。今天被甲方临时改需求，心态有点裂。",
+      "timestamp": "2026-08-20 18:29:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "先别急着消化，见面你吐槽，我负责听和递纸巾。",
+      "timestamp": "2026-08-20 18:30:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "你这句有点犯规。",
+      "timestamp": "2026-08-20 18:31:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "犯规但有效。",
+      "timestamp": "2026-08-20 18:32:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "到地铁了，二十分钟。",
+      "timestamp": "2026-08-20 18:41:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "我在门口等你，不用跑。",
+      "timestamp": "2026-08-20 18:42:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "今天谢谢你陪我吃饭。我刚才情绪有点冲。",
+      "timestamp": "2026-08-20 22:18:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "没关系，你是在累，不是在乱发脾气。我能分得清。",
+      "timestamp": "2026-08-20 22:21:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "但我还是想说抱歉，下次我会先说我需要缓一缓。",
+      "timestamp": "2026-08-20 22:23:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "好。我也会少急着给建议，先听你说完。",
+      "timestamp": "2026-08-20 22:25:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "我们好像越来越会对齐了。",
+      "timestamp": "2026-08-20 22:26:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "嗯，像两个人慢慢调同一个频率。",
+      "timestamp": "2026-08-20 22:28:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "林夏",
+      "content": "晚安，今天的柠檬茶版权费到账。",
+      "timestamp": "2026-08-20 23:02:00",
+      "msg_type": "text"
+    },
+    {
+      "sender": "周然",
+      "content": "晚安，明天别排太久贝果。",
+      "timestamp": "2026-08-20 23:04:00",
+      "msg_type": "text"
+    }
+  ]
+}

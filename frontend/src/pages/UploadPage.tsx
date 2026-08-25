@@ -1,4 +1,17 @@
-import { AlertCircle, BookOpen, Database, FileJson, FileSpreadsheet, FileText, Play, RefreshCw, UploadCloud } from 'lucide-react'
+import {
+  AlertCircle,
+  BookOpen,
+  Database,
+  ExternalLink,
+  FileJson,
+  FileSpreadsheet,
+  FileText,
+  HelpCircle,
+  Play,
+  RefreshCw,
+  UploadCloud,
+  X,
+} from 'lucide-react'
 import { type ChangeEvent, type DragEvent, useRef, useState } from 'react'
 
 import { analyzeChat, getApiErrorMessage, uploadChatFile } from '../api'
@@ -27,7 +40,13 @@ const COPY = {
   analyzing: '\u5206\u6790\u4e2d...',
   missingFile: '\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u804a\u5929\u8bb0\u5f55\u6587\u4ef6\u3002',
   guideTitle: '\u5bfc\u5165\u6559\u7a0b',
+  guideButton: '\u67e5\u770b\u5fae\u4fe1\u804a\u5929\u8bb0\u5f55\u5bfc\u51fa\u6559\u7a0b',
   guideIntro: '\u4e0d\u786e\u5b9a\u6587\u4ef6\u600e\u4e48\u51c6\u5907\u65f6\uff0c\u6309\u8fd9\u4e09\u6b65\u8d70\u5c31\u597d\u3002',
+  exportHelpTitle: '\u600e\u4e48\u5bfc\u51fa\u5fae\u4fe1\u804a\u5929\u8bb0\u5f55',
+  exportHelpIntro:
+    '\u5efa\u8bae\u7528 WeChatMsg \u5148\u628a\u804a\u5929\u8bb0\u5f55\u5bfc\u51fa\u6210 JSON\u3001CSV \u6216 TXT\uff0c\u518d\u56de\u5230\u8fd9\u91cc\u4e0a\u4f20\u5206\u6790\u3002',
+  exportHelpLink: '\u6253\u5f00 WeChatMsg \u5b98\u65b9 GitHub',
+  close: '\u5173\u95ed',
   supportTitle: '\u652f\u6301\u683c\u5f0f',
   supportText: '\u6700\u7a33\u59a5\u7684\u662f JSON / CSV / TXT\uff0c\u4e0d\u4f9d\u8d56 WeChatMsg\u3002',
   dbTitle: '\u6570\u636e\u5e93\u6587\u4ef6',
@@ -52,6 +71,15 @@ const guideSteps = [
   },
 ]
 
+const exportSteps = [
+  '\u6253\u5f00 WeChatMsg \u5b98\u65b9 GitHub\uff0c\u6309 README \u6216\u6587\u6863\u5b89\u88c5\u5e76\u542f\u52a8\u5de5\u5177\u3002',
+  '\u6309\u5de5\u5177\u63d0\u793a\u9009\u62e9\u9700\u8981\u5bfc\u51fa\u7684\u5fae\u4fe1\u8d26\u53f7\u3001\u597d\u53cb\u6216\u7fa4\u804a\u3002',
+  '\u5728\u5bfc\u51fa\u529f\u80fd\u91cc\u9009\u62e9 JSON\u3001CSV \u6216 TXT \u683c\u5f0f\uff1b\u8fd9\u4e09\u79cd\u683c\u5f0f\u53ef\u4ee5\u76f4\u63a5\u4e0a\u4f20\u5230\u5173\u7cfb\u5207\u7247\u3002',
+  '\u5982\u679c\u4f60\u53ea\u62ff\u5230 .db \u6216 .sqlite \u6587\u4ef6\uff0c\u4e5f\u53ef\u4ee5\u5c1d\u8bd5\u4e0a\u4f20\uff1b\u4f46\u540e\u7aef\u9700\u8981\u914d\u597d WeChatMsg CLI\u3002',
+]
+
+const wechatMsgUrl = 'https://github.com/LC044/WeChatMsg'
+
 function UploadPage({ onAnalysisComplete }: UploadPageProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -59,6 +87,7 @@ function UploadPage({ onAnalysisComplete }: UploadPageProps) {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [showExportHelp, setShowExportHelp] = useState(false)
 
   const isWorking = status === 'uploading' || status === 'analyzing'
   const progressValue = status === 'uploading' ? uploadProgress : status === 'analyzing' ? 100 : 0
@@ -233,7 +262,18 @@ function UploadPage({ onAnalysisComplete }: UploadPageProps) {
                 <BookOpen size={19} strokeWidth={1.8} />
               </span>
               <div>
-                <h2 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{COPY.guideTitle}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-[rgb(var(--text-primary))]">{COPY.guideTitle}</h2>
+                  <button
+                    type="button"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/[0.32] text-[#4f8cff] shadow-soft transition hover:bg-white/[0.52] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f8cff]/70 dark:bg-white/[0.08] dark:hover:bg-white/[0.14]"
+                    aria-label={COPY.guideButton}
+                    title={COPY.guideButton}
+                    onClick={() => setShowExportHelp(true)}
+                  >
+                    <HelpCircle size={17} strokeWidth={1.8} />
+                  </button>
+                </div>
                 <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{COPY.guideIntro}</p>
               </div>
             </div>
@@ -277,6 +317,60 @@ function UploadPage({ onAnalysisComplete }: UploadPageProps) {
           </div>
         </div>
       </GlassCard>
+
+      {showExportHelp ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-white/[0.34] px-4 backdrop-blur-xl dark:bg-black/[0.28]">
+          <GlassCard className="w-full max-w-2xl p-6 sm:p-7">
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <p className="text-sm font-medium text-[#4f8cff] dark:text-[#8fc2ff]">{COPY.guideTitle}</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight text-[rgb(var(--text-primary))]">
+                  {COPY.exportHelpTitle}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[rgb(var(--text-secondary))]">{COPY.exportHelpIntro}</p>
+              </div>
+              <button
+                type="button"
+                className="grid h-9 w-9 flex-none place-items-center rounded-full bg-white/[0.36] text-[rgb(var(--text-secondary))] shadow-soft transition hover:bg-white/[0.56] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f8cff]/70 dark:bg-white/[0.08] dark:hover:bg-white/[0.14]"
+                aria-label={COPY.close}
+                onClick={() => setShowExportHelp(false)}
+              >
+                <X size={18} strokeWidth={1.8} />
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-3">
+              {exportSteps.map((step, index) => (
+                <div key={step} className="flex gap-3 rounded-2xl bg-white/[0.24] p-4 dark:bg-white/[0.06]">
+                  <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-white/[0.5] text-xs font-semibold text-[#4f8cff] dark:bg-white/[0.1]">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm leading-7 text-[rgb(var(--text-secondary))]">{step}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <a
+                className="glass-button inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-sm font-semibold"
+                href={wechatMsgUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {COPY.exportHelpLink}
+                <ExternalLink size={16} strokeWidth={1.8} />
+              </a>
+              <button
+                type="button"
+                className="rounded-full px-5 py-3 text-sm font-medium text-[rgb(var(--text-secondary))] transition hover:bg-white/[0.3] hover:text-[rgb(var(--text-primary))] dark:hover:bg-white/[0.08]"
+                onClick={() => setShowExportHelp(false)}
+              >
+                {COPY.close}
+              </button>
+            </div>
+          </GlassCard>
+        </div>
+      ) : null}
     </section>
   )
 }
