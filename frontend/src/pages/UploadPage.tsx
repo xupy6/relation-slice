@@ -162,7 +162,11 @@ function UploadPage({ onAnalysisComplete }: UploadPageProps) {
             ) : null}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <GlassButton className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold" disabled={isWorking} onClick={handleAnalyze}>
+              <GlassButton
+                className="inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-sm font-semibold"
+                disabled={isWorking}
+                onClick={handleAnalyze}
+              >
                 <Play size={16} fill="currentColor" strokeWidth={1.8} />
                 {COPY.analyze}
               </GlassButton>

@@ -67,7 +67,7 @@ function ResultPage({ report, onReset }: ResultPageProps) {
               <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl">{COPY.emptyTitle}</h1>
               <p className="mt-3 max-w-xl text-base leading-7 text-[rgb(var(--text-secondary))]">{COPY.emptyCopy}</p>
             </div>
-            <GlassButton className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold" onClick={onReset}>
+            <GlassButton className="inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-sm font-semibold" onClick={onReset}>
               <RefreshCw size={16} strokeWidth={1.8} />
               {COPY.uploadAgain}
             </GlassButton>

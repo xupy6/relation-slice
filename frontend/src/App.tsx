@@ -67,7 +67,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[800px] items-center px-5 py-10">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[800px] items-start px-4 py-6 sm:px-5 sm:py-10 md:items-center">
         {view === 'upload' ? (
           <UploadPage onAnalysisComplete={handleAnalysisComplete} />
         ) : (
