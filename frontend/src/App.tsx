@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ExternalLink, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward } from 'lucide-react'
 
 import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, uploadChatFiles } from './api'
 import ClonePage from './pages/ClonePage'
@@ -8,6 +9,13 @@ import { loadHistory, saveHistory } from './storage'
 import type { AnalysisHistoryItem, CloneMessage, CloneProfile, CloneStatus, FinalReport, WorkStatus } from './types'
 
 type AppView = 'upload' | 'result' | 'cloneUpload' | 'cloneChat'
+type NavGroup = 'relation' | 'clone'
+
+const MUSIC_TRACKS = [
+  { title: 'TA Theme', src: '/music/ta-music.wav' },
+  { title: 'Quiet Signal', src: '/music/quiet-signal.wav' },
+  { title: 'Soft Return', src: '/music/soft-return.wav' },
+]
 
 const COPY = {
   appName: '\u6d88\u5931\u7684TA',
@@ -18,6 +26,15 @@ const COPY = {
   clone: '\u8d5b\u535a\u514b\u9686',
   chat: '\u5bf9\u8bdd',
   musicBox: '\u97f3\u4e50\u76d2',
+  previousTrack: '\u4e0a\u4e00\u9996',
+  nextTrack: '\u4e0b\u4e00\u9996',
+  more: '\u66f4\u591a',
+  contactAuthor: '\u8054\u7cfb\u4f5c\u8005',
+  reward: '\u8d5e\u8d4f',
+  qq: 'QQ',
+  wechat: '\u5fae\u4fe1',
+  github: 'GitHub',
+  close: '\u5173\u95ed',
   missingFile: '\u8bf7\u5148\u9009\u62e9\u804a\u5929\u8bb0\u5f55\u6587\u4ef6\u3002',
 }
 
@@ -35,11 +52,28 @@ function App() {
   const [cloneStatus, setCloneStatus] = useState<CloneStatus>('idle')
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
+  const [musicTrackIndex, setMusicTrackIndex] = useState(0)
+  const [musicProgress, setMusicProgress] = useState(0)
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const [openMorePanel, setOpenMorePanel] = useState<'contact' | 'reward' | null>(null)
+  const [hoveredNavGroup, setHoveredNavGroup] = useState<NavGroup | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     saveHistory(history)
   }, [history])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) {
+      return
+    }
+
+    setMusicProgress(0)
+    if (isMusicPlaying) {
+      void audio.play().catch(() => setIsMusicPlaying(false))
+    }
+  }, [isMusicPlaying, musicTrackIndex])
 
   function handleFilesSelected(nextFiles?: File[]) {
     if (!nextFiles?.length) {
@@ -158,13 +192,45 @@ function App() {
     }
 
     if (audio.paused) {
-      await audio.play()
-      setIsMusicPlaying(true)
+      try {
+        await audio.play()
+        setIsMusicPlaying(true)
+      } catch {
+        setIsMusicPlaying(false)
+      }
       return
     }
 
     audio.pause()
     setIsMusicPlaying(false)
+  }
+
+  function handleMusicTimeUpdate() {
+    const audio = audioRef.current
+    if (!audio || !audio.duration) {
+      setMusicProgress(0)
+      return
+    }
+
+    setMusicProgress(Math.round((audio.currentTime / audio.duration) * 100))
+  }
+
+  function handleMusicSeek(progress: number) {
+    const audio = audioRef.current
+    if (!audio || !audio.duration) {
+      return
+    }
+
+    audio.currentTime = (progress / 100) * audio.duration
+    setMusicProgress(progress)
+  }
+
+  function handlePreviousTrack() {
+    setMusicTrackIndex((current) => (current === 0 ? MUSIC_TRACKS.length - 1 : current - 1))
+  }
+
+  function handleNextTrack() {
+    setMusicTrackIndex((current) => (current + 1) % MUSIC_TRACKS.length)
   }
 
   async function handleCloneSend(message: string) {
@@ -187,13 +253,17 @@ function App() {
     }
   }
 
+  const activeNavGroup: NavGroup = isRelationView(view) ? 'relation' : 'clone'
+  const liquidNavGroup = hoveredNavGroup ?? activeNavGroup
+  const currentTrack = MUSIC_TRACKS[musicTrackIndex]
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--app-bg))] text-[rgb(var(--text-primary))]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.92),transparent_28%),linear-gradient(135deg,rgba(238,247,255,0.96),rgba(255,255,255,0.78)_42%,rgba(255,245,242,0.82))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.98),rgba(21,26,38,0.88)_48%,rgba(42,31,34,0.74))]" />
 
       <header className="sticky top-0 z-20 border-b border-white/50 bg-white/[0.62] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
         <nav className="relative flex h-14 w-full items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-4">
+          <div className="ml-2 flex items-center gap-6">
             <button
               type="button"
               className="grid h-7 w-16 place-items-center rounded-full bg-white/62 shadow-soft ring-1 ring-white/70 transition hover:bg-white/80 dark:bg-white/10 dark:ring-white/15"
@@ -206,17 +276,36 @@ function App() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
               </span>
             </button>
-            <button
-              type="button"
-              className={`music-box ${isMusicPlaying ? 'music-box-active' : ''}`}
-              aria-label={COPY.musicBox}
-              title={COPY.musicBox}
-              onClick={handleToggleMusic}
-            >
-              <span className="music-box-pin" />
-              <span className="music-box-disc" />
-            </button>
-            <audio ref={audioRef} src="/music/ta-music.wav" loop onPause={() => setIsMusicPlaying(false)} onPlay={() => setIsMusicPlaying(true)} />
+            <div className="music-box-player" title={COPY.musicBox}>
+              <button type="button" className="music-control" aria-label={COPY.previousTrack} onClick={handlePreviousTrack}>
+                <SkipBack size={12} fill="currentColor" />
+              </button>
+              <button type="button" className="music-control music-control-main" aria-label={COPY.musicBox} onClick={handleToggleMusic}>
+                {isMusicPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+              </button>
+              <button type="button" className="music-control" aria-label={COPY.nextTrack} onClick={handleNextTrack}>
+                <SkipForward size={12} fill="currentColor" />
+              </button>
+              <input
+                className="music-progress"
+                type="range"
+                min="0"
+                max="100"
+                value={musicProgress}
+                aria-label={COPY.musicBox}
+                onChange={(event) => handleMusicSeek(Number(event.target.value))}
+              />
+              <span className={`music-box-disc ${isMusicPlaying ? 'music-box-disc-active' : ''}`} />
+            </div>
+            <audio
+              ref={audioRef}
+              src={currentTrack.src}
+              onEnded={handleNextTrack}
+              onLoadedMetadata={handleMusicTimeUpdate}
+              onPause={() => setIsMusicPlaying(false)}
+              onPlay={() => setIsMusicPlaying(true)}
+              onTimeUpdate={handleMusicTimeUpdate}
+            />
           </div>
 
           <button
@@ -229,11 +318,17 @@ function App() {
             <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
           </button>
 
-          <div className="flex max-w-[calc(100vw-118px)] gap-2 overflow-x-auto rounded-full border border-white/60 bg-white/[0.48] p-1 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
+          <div
+            className="nav-shell"
+            data-mode={activeNavGroup}
+            onMouseLeave={() => setHoveredNavGroup(null)}
+          >
+            <span className={`nav-liquid ${liquidNavGroup === 'clone' ? 'nav-liquid-clone' : 'nav-liquid-relation'}`} />
             <button
               type="button"
               className={isRelationView(view) ? 'nav-pill-active' : 'nav-pill'}
               onClick={() => setView('upload')}
+              onMouseEnter={() => setHoveredNavGroup('relation')}
             >
               {COPY.relationSlice}
             </button>
@@ -259,6 +354,7 @@ function App() {
               type="button"
               className={isCloneView(view) ? 'nav-pill-active' : 'nav-pill'}
               onClick={() => setView('cloneUpload')}
+              onMouseEnter={() => setHoveredNavGroup('clone')}
             >
               {COPY.clone}
             </button>
@@ -318,6 +414,88 @@ function App() {
           <ResultPage report={report} onReset={handleReset} />
         )}
       </main>
+
+      <div className="fixed bottom-5 left-5 z-30">
+        <button
+          type="button"
+          className="more-trigger"
+          aria-expanded={isMoreOpen}
+          onClick={() => setIsMoreOpen((current) => !current)}
+        >
+          <MoreHorizontal size={17} strokeWidth={1.8} />
+          {COPY.more}
+        </button>
+        {isMoreOpen ? (
+          <div className="more-menu">
+            <button
+              type="button"
+              className="more-menu-item"
+              onClick={() => {
+                setOpenMorePanel('contact')
+                setIsMoreOpen(false)
+              }}
+            >
+              <MessageCircle size={16} strokeWidth={1.8} />
+              {COPY.contactAuthor}
+            </button>
+            <button
+              type="button"
+              className="more-menu-item"
+              onClick={() => {
+                setOpenMorePanel('reward')
+                setIsMoreOpen(false)
+              }}
+            >
+              <span className="grid h-4 w-4 place-items-center rounded-full bg-[#ff2d55]/12 text-xs text-[#ff2d55]">¥</span>
+              {COPY.reward}
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      {openMorePanel ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-white/[0.34] px-4 backdrop-blur-xl dark:bg-black/[0.28]">
+          <div className="glass apple-panel w-full max-w-md p-6 sm:p-7">
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.more}</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight">
+                  {openMorePanel === 'contact' ? COPY.contactAuthor : COPY.reward}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="grid h-9 w-9 flex-none place-items-center rounded-full bg-white/[0.42] text-[rgb(var(--text-secondary))] shadow-soft transition hover:bg-white/[0.62] dark:bg-white/[0.08]"
+                aria-label={COPY.close}
+                onClick={() => setOpenMorePanel(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            {openMorePanel === 'contact' ? (
+              <div className="mt-6 grid gap-3">
+                <a className="contact-link" href="tencent://message/?uin=2788637607&Site=&Menu=yes">
+                  <MessageCircle size={17} strokeWidth={1.8} />
+                  {COPY.qq}: 2788637607
+                </a>
+                <a className="contact-link" href="weixin://">
+                  <MessageCircle size={17} strokeWidth={1.8} />
+                  {COPY.wechat}: xupy666
+                </a>
+                <a className="contact-link" href="https://github.com/xupy6" target="_blank" rel="noreferrer">
+                  <ExternalLink size={17} strokeWidth={1.8} />
+                  {COPY.github}: xupy6
+                </a>
+              </div>
+            ) : (
+              <div className="mt-6 overflow-hidden rounded-[28px] border border-white/60 bg-white/[0.42] p-3 shadow-soft dark:border-white/10 dark:bg-white/[0.08]">
+                <img className="mx-auto max-h-[62vh] w-full rounded-[22px] object-contain" src="/picture/reward.png" alt={COPY.reward} />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

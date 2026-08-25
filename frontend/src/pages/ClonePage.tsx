@@ -105,7 +105,7 @@ function ClonePage({
   }
 
   return (
-    <section className={`grid w-full gap-6 ${activePanel === 'chat' ? 'xl:grid-cols-[380px_minmax(0,1fr)]' : ''}`}>
+    <section className={`grid w-full gap-6 xl:items-start ${activePanel === 'chat' ? 'xl:grid-cols-[380px_minmax(0,1fr)]' : ''}`}>
       <div className="space-y-6">
         {activePanel === 'upload' ? (
           <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
@@ -209,18 +209,10 @@ function ClonePage({
           </div>
 
           {profile ? (
-            <div className="mt-5 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-[24px] border border-white/50 bg-white/[0.34] p-5 shadow-soft dark:border-white/10 dark:bg-white/[0.06]">
-                <p className="text-2xl font-semibold leading-tight">{profile.clone_name || profile.target_sender}</p>
-                <p className="mt-3 text-sm leading-7 text-[rgb(var(--text-secondary))]">{profile.persona_summary}</p>
-                <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">{COPY.simulationNote}</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ProfileList title="\u8bf4\u8bdd\u98ce\u683c" items={profile.speaking_style} />
-                <ProfileList title="\u53e3\u5934\u7985" items={profile.signature_phrases} />
-                <ProfileList title="\u60c5\u7eea\u5e95\u8272" items={profile.emotional_tone ? [profile.emotional_tone] : []} />
-                <ProfileList title="\u56de\u590d\u89c4\u5219" items={profile.reply_rules} />
-              </div>
+            <div className="mt-5 rounded-[24px] border border-white/50 bg-white/[0.34] p-5 shadow-soft dark:border-white/10 dark:bg-white/[0.06]">
+              <p className="text-2xl font-semibold leading-tight">{profile.clone_name || profile.target_sender}</p>
+              <p className="mt-3 text-sm leading-7 text-[rgb(var(--text-secondary))]">{profile.persona_summary}</p>
+              <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">{COPY.simulationNote}</p>
             </div>
           ) : (
             <div className="mt-5 rounded-[24px] bg-white/[0.28] p-5 text-sm leading-7 text-[rgb(var(--text-muted))] dark:bg-white/[0.06]">
@@ -231,7 +223,7 @@ function ClonePage({
       </div>
 
       {activePanel === 'chat' ? (
-      <GlassCard className="apple-panel flex min-h-[calc(100vh-130px)] flex-col p-5 sm:p-6">
+      <GlassCard className="apple-panel flex h-[calc(100vh-130px)] min-h-[620px] flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-white/55 text-[#007aff] shadow-soft dark:bg-white/10">
@@ -291,25 +283,6 @@ function ClonePage({
       </GlassCard>
       ) : null}
     </section>
-  )
-}
-
-function ProfileList({ items = [], title }: { items?: string[]; title: string }) {
-  return (
-    <div className="rounded-[22px] bg-white/[0.3] p-4 shadow-soft dark:bg-white/[0.06]">
-      <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">{title}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {items.length ? (
-          items.slice(0, 4).map((item) => (
-            <span key={item} className="rounded-full bg-white/[0.46] px-3 py-1 text-xs leading-5 text-[rgb(var(--text-secondary))] dark:bg-white/[0.08]">
-              {item}
-            </span>
-          ))
-        ) : (
-          <span className="text-xs leading-5 text-[rgb(var(--text-muted))]">Pending</span>
-        )}
-      </div>
-    </div>
   )
 }
 
