@@ -82,3 +82,13 @@ export type FinalReport = {
   fun_tags?: string[]
   all_reports?: AllReports
 }
+
+export type WorkStatus = 'idle' | 'uploading' | 'analyzing' | 'error'
+
+export type AnalysisHistoryItem = {
+  id: string
+  fileName: string
+  messageCount: number
+  createdAt: string
+  report: FinalReport
+}

@@ -4,10 +4,10 @@
 
 :root {
   color-scheme: light;
-  --app-bg: 244 247 250;
-  --text-primary: 21 27 38;
-  --text-secondary: 73 82 98;
-  --text-muted: 111 121 137;
+  --app-bg: 248 250 252;
+  --text-primary: 18 22 30;
+  --text-secondary: 70 78 92;
+  --text-muted: 116 125 139;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -51,22 +51,32 @@ button {
 }
 
 .glass {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.34));
+  box-shadow:
+    0 22px 70px rgba(37, 47, 70, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+}
+
+.apple-panel {
+  box-shadow:
+    0 28px 90px rgba(37, 47, 70, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .glass-button {
-  border: 1px solid rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.62);
   color: rgb(var(--text-primary));
-  box-shadow: 0 12px 34px rgba(37, 47, 70, 0.12);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 14px 34px rgba(37, 47, 70, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   transition:
     transform 180ms ease,
     background-color 180ms ease,
@@ -75,7 +85,7 @@ button {
 
 .glass-button:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.48);
+  background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 16px 42px rgba(37, 47, 70, 0.16);
 }
 
@@ -176,7 +186,7 @@ button {
 @media (prefers-color-scheme: dark) {
   .glass {
     border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
     box-shadow: 0 18px 52px rgba(0, 0, 0, 0.24);
   }
 
