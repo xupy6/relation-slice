@@ -170,24 +170,28 @@ function App() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.92),transparent_28%),linear-gradient(135deg,rgba(238,247,255,0.96),rgba(255,255,255,0.78)_42%,rgba(255,245,242,0.82))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.98),rgba(21,26,38,0.88)_48%,rgba(42,31,34,0.74))]" />
 
       <header className="sticky top-0 z-20 border-b border-white/50 bg-white/[0.62] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
-        <nav className="flex h-16 w-full items-center justify-between px-4 sm:px-6">
+        <nav className="relative flex h-14 w-full items-center justify-between px-4 sm:px-6">
           <button
             type="button"
-            className="flex items-center gap-3 text-left"
+            className="grid h-7 w-16 place-items-center rounded-full bg-white/62 shadow-soft ring-1 ring-white/70 transition hover:bg-white/80 dark:bg-white/10 dark:ring-white/15"
             onClick={() => setView('upload')}
             aria-label={COPY.backToUpload}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-white/70 shadow-soft ring-1 ring-white/70 dark:bg-white/10 dark:ring-white/15">
-              <span className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-              </span>
+            <span className="flex gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
             </span>
-            <span className="text-center">
-              <span className="block text-[15px] font-semibold leading-5">{COPY.appName}</span>
-              <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
-            </span>
+          </button>
+
+          <button
+            type="button"
+            className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 text-center sm:block"
+            onClick={() => setView('upload')}
+            aria-label={COPY.backToUpload}
+          >
+            <span className="block text-[15px] font-semibold leading-5">{COPY.appName}</span>
+            <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
           </button>
 
           <div className="flex rounded-full border border-white/60 bg-white/[0.48] p-1 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08]">
@@ -216,7 +220,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100vh-64px)] w-full items-start px-3 py-5 sm:px-6 sm:py-8 2xl:px-8">
+      <main className="relative z-10 flex min-h-[calc(100vh-56px)] w-full items-start px-3 py-5 sm:px-6 sm:py-8 2xl:px-8">
         {view === 'upload' ? (
           <UploadPage
             error={error}
