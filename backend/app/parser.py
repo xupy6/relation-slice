@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import re
 import shlex
 import subprocess
 import tempfile
@@ -24,10 +25,11 @@ class ChatMessage(BaseModel):
     msg_type: str = Field(default="text")
 
 
-SENDER_KEYS = ("sender", "Sender", "talker", "from", "user", "nickname", "display_name", "发送者")
-CONTENT_KEYS = ("content", "Content", "text", "message", "msg", "StrContent", "内容", "消息内容")
-TIME_KEYS = ("timestamp", "Timestamp", "time", "datetime", "create_time", "CreateTime", "时间", "消息时间")
-TYPE_KEYS = ("msg_type", "type", "Type", "MsgType", "消息类型", "类型")
+SENDER_KEYS = ("sender", "Sender", "talker", "from", "user", "nickname", "display_name", "\u53d1\u9001\u8005")
+CONTENT_KEYS = ("content", "Content", "text", "message", "msg", "StrContent", "\u5185\u5bb9", "\u6d88\u606f\u5185\u5bb9")
+TIME_KEYS = ("timestamp", "Timestamp", "time", "datetime", "create_time", "CreateTime", "\u65f6\u95f4", "\u6d88\u606f\u65f6\u95f4")
+TYPE_KEYS = ("msg_type", "type", "Type", "MsgType", "\u6d88\u606f\u7c7b\u578b", "\u7c7b\u578b")
+EXPORTED_FILE_TYPES = ".json, .csv, or .txt"
 
 
 def parse_upload(file_path: str) -> list[ChatMessage]:
@@ -40,10 +42,12 @@ def parse_upload(file_path: str) -> list[ChatMessage]:
         return _parse_json(path)
     if suffix == ".csv":
         return _parse_csv(path)
+    if suffix == ".txt":
+        return _parse_text(path)
     if suffix in {".db", ".sqlite", ".sqlite3"}:
         return _parse_wechat_database(path)
 
-    raise ChatParseError(f"Unsupported file type: {suffix or 'unknown'}")
+    raise ChatParseError(f"Unsupported file type: {suffix or 'unknown'}. Please upload {EXPORTED_FILE_TYPES}.")
 
 
 def _parse_json(path: Path) -> list[ChatMessage]:
@@ -77,6 +81,46 @@ def _parse_csv(path: Path) -> list[ChatMessage]:
     return _normalize_records(rows)
 
 
+def _parse_text(path: Path) -> list[ChatMessage]:
+    try:
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
+    except UnicodeDecodeError as exc:
+        raise ChatParseError("TXT exports must be UTF-8 encoded.") from exc
+
+    records: list[dict[str, str]] = []
+    current: dict[str, str] | None = None
+
+    patterns = (
+        re.compile(r"^\[(?P<time>[^\]]+)\]\s*(?P<sender>[^:：]+)[:：]\s*(?P<content>.*)$"),
+        re.compile(r"^(?P<time>\d{4}[-/]\d{1,2}[-/]\d{1,2}\s+\d{1,2}:\d{2}(?::\d{2})?)\s+(?P<sender>[^:：]+)[:：]\s*(?P<content>.*)$"),
+    )
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        match = next((pattern.match(stripped) for pattern in patterns if pattern.match(stripped)), None)
+        if match:
+            current = {
+                "timestamp": match.group("time"),
+                "sender": match.group("sender").strip(),
+                "content": match.group("content").strip(),
+                "msg_type": "text",
+            }
+            records.append(current)
+        elif current:
+            current["content"] = f"{current['content']}\n{stripped}".strip()
+
+    if not records:
+        raise ChatParseError(
+            "TXT export was not recognized. Expected lines like "
+            "'2026-08-25 12:00:00 Alice: hello' or '[2026-08-25 12:00:00] Alice: hello'."
+        )
+
+    return _normalize_records(records)
+
+
 def _parse_wechat_database(path: Path) -> list[ChatMessage]:
     """Export a WeChat database through a configured WeChatMsg CLI, then parse it.
 
@@ -89,7 +133,8 @@ def _parse_wechat_database(path: Path) -> list[ChatMessage]:
     if not command_template:
         raise ChatParseError(
             "WeChat database parsing requires WeChatMsg CLI configuration. "
-            "Set WECHATMSG_EXPORT_COMMAND with {input} and {output} placeholders."
+            "Set WECHATMSG_EXPORT_COMMAND with {input} and {output} placeholders, "
+            f"or upload an already exported {EXPORTED_FILE_TYPES} file."
         )
 
     output_suffix = os.getenv("WECHATMSG_EXPORT_FORMAT", "json").lower().lstrip(".")
@@ -102,7 +147,7 @@ def _parse_wechat_database(path: Path) -> list[ChatMessage]:
 
         try:
             result = subprocess.run(
-                shlex.split(command),
+                shlex.split(command, posix=os.name != "nt"),
                 capture_output=True,
                 check=False,
                 encoding="utf-8",
@@ -110,13 +155,18 @@ def _parse_wechat_database(path: Path) -> list[ChatMessage]:
                 timeout=int(os.getenv("WECHATMSG_EXPORT_TIMEOUT", "120")),
             )
         except FileNotFoundError as exc:
-            raise ChatParseError("WeChatMsg CLI executable was not found.") from exc
+            raise ChatParseError(
+                f"WeChatMsg CLI executable was not found. You can upload an already exported {EXPORTED_FILE_TYPES} file instead."
+            ) from exc
         except subprocess.TimeoutExpired as exc:
             raise ChatParseError("WeChatMsg CLI export timed out.") from exc
 
         if result.returncode != 0:
             detail = (result.stderr or result.stdout or "").strip()
-            raise ChatParseError(f"WeChatMsg CLI export failed: {detail or 'unknown error'}")
+            raise ChatParseError(
+                f"WeChatMsg CLI export failed: {detail or 'unknown error'}. "
+                f"You can upload an already exported {EXPORTED_FILE_TYPES} file instead."
+            )
         if not output_path.exists():
             raise ChatParseError("WeChatMsg CLI did not produce the expected export file.")
 
