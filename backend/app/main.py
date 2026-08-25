@@ -61,10 +61,34 @@ async def health_check() -> dict[str, object]:
 
 @app.post("/api/upload", dependencies=[Depends(check_api_rate_limit)])
 async def upload_chat_file(file: UploadFile = File(...)) -> dict[str, object]:
-    return await _upload_chat_file(file)
+    messages = await _save_and_parse_upload(file)
+    return _chat_messages_response(messages)
 
 
-async def _upload_chat_file(file: UploadFile) -> dict[str, object]:
+@app.post("/api/upload/batch", dependencies=[Depends(check_api_rate_limit)])
+async def upload_chat_files(files: list[UploadFile] = File(...)) -> dict[str, object]:
+    if not files:
+        raise HTTPException(status_code=400, detail="files cannot be empty")
+
+    all_messages: list[ChatMessage] = []
+    errors: list[str] = []
+    for file in files:
+        try:
+            all_messages.extend(await _save_and_parse_upload(file))
+        except HTTPException as exc:
+            errors.append(f"{file.filename or 'unknown file'}: {exc.detail}")
+
+    if not all_messages:
+        detail = "; ".join(errors[:5]) or "No valid chat messages found."
+        raise HTTPException(status_code=400, detail=detail)
+
+    if errors:
+        logger.warning("Some uploaded files failed to parse: %s", "; ".join(errors[:5]))
+
+    return _chat_messages_response(all_messages)
+
+
+async def _save_and_parse_upload(file: UploadFile) -> list[ChatMessage]:
     upload_dir = Path(__file__).resolve().parents[1] / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -83,6 +107,10 @@ async def _upload_chat_file(file: UploadFile) -> dict[str, object]:
     finally:
         await file.close()
 
+    return messages
+
+
+def _chat_messages_response(messages: list[ChatMessage]) -> dict[str, object]:
     return api_success({"chat_messages": [message.model_dump(mode="json") for message in messages]})
 
 

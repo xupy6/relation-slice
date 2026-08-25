@@ -1,7 +1,6 @@
 import {
   AlertCircle,
   BookOpen,
-  CheckCircle2,
   Clock3,
   Database,
   ExternalLink,
@@ -23,14 +22,14 @@ import type { AnalysisHistoryItem, WorkStatus } from '../types'
 
 type UploadPageProps = {
   error: string | null
-  file: File | null
+  files: File[]
   history: AnalysisHistoryItem[]
   messageCount: number
   status: WorkStatus
   uploadProgress: number
   onAnalyze: () => void
   onClearHistory: () => void
-  onFileSelected: (file?: File) => void
+  onFilesSelected: (files?: File[]) => void
   onSelectHistory: (item: AnalysisHistoryItem) => void
 }
 
@@ -40,7 +39,7 @@ const COPY = {
   intro:
     '\u5bfc\u5165\u804a\u5929\u8bb0\u5f55\uff0c\u8ba9 AI \u628a\u4e24\u4e2a\u4eba\u7684\u8bed\u6c14\u3001\u8282\u594f\u548c\u60c5\u7eea\u56de\u58f0\u5207\u6210\u4e00\u4efd\u6e05\u723d\u7684\u5173\u7cfb\u62a5\u544a\u3002',
   fileHint: '.db .sqlite .json .csv .txt',
-  selectFile: '\u9009\u62e9\u6587\u4ef6',
+  selectFiles: '\u9009\u62e9\u591a\u4e2a\u6587\u4ef6',
   analyze: '\u5f00\u59cb\u5206\u6790',
   retry: '\u91cd\u8bd5',
   dropTitle: '\u628a\u804a\u5929\u8bb0\u5f55\u653e\u5230\u8fd9\u91cc',
@@ -67,6 +66,10 @@ const COPY = {
   parsedMessages: '\u89e3\u6790\u6d88\u606f',
   uploadPercent: '\u4e0a\u4f20\u8fdb\u5ea6',
   noFile: '\u5c1a\u672a\u9009\u62e9',
+  multiFileName: '\u4e2a\u6587\u4ef6\u5df2\u9009',
+  relationshipMap: '\u5173\u7cfb\u56fe\u8c31',
+  graphHintIdle: '\u9009\u62e9\u6587\u4ef6\u540e\u5f00\u59cb\u8fde\u63a5\u6570\u636e\u3002',
+  graphHintReady: '\u804a\u5929\u6570\u636e\u5c31\u7eea\uff0c\u53ef\u5f00\u59cb\u5206\u6790\u3002',
   historyTitle: '\u5386\u53f2\u8bb0\u5f55',
   emptyHistory: '\u5b8c\u6210\u5206\u6790\u540e\uff0c\u8bb0\u5f55\u4f1a\u4fdd\u5b58\u5728\u8fd9\u91cc\u3002',
   clearHistory: '\u6e05\u7a7a',
@@ -99,16 +102,28 @@ const exportSteps = [
 
 const wechatMsgUrl = 'https://github.com/LC044/WeChatMsg'
 
+function getSelectedFileLabel(files: File[]) {
+  if (!files.length) {
+    return ''
+  }
+
+  if (files.length === 1) {
+    return files[0].name
+  }
+
+  return `${files[0].name} + ${files.length - 1} ${COPY.multiFileName}`
+}
+
 function UploadPage({
   error,
-  file,
+  files,
   history,
   messageCount,
   status,
   uploadProgress,
   onAnalyze,
   onClearHistory,
-  onFileSelected,
+  onFilesSelected,
   onSelectHistory,
 }: UploadPageProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -116,10 +131,11 @@ function UploadPage({
 
   const isWorking = status === 'uploading' || status === 'analyzing'
   const progressValue = status === 'uploading' ? uploadProgress : status === 'analyzing' ? 100 : uploadProgress
-  const statusLabel = status === 'uploading' ? COPY.uploading : status === 'analyzing' ? COPY.analyzing : file ? COPY.ready : COPY.idle
+  const statusLabel = status === 'uploading' ? COPY.uploading : status === 'analyzing' ? COPY.analyzing : files.length ? COPY.ready : COPY.idle
+  const selectedFileLabel = getSelectedFileLabel(files)
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
-    onFileSelected(event.target.files?.[0])
+    onFilesSelected(Array.from(event.target.files ?? []))
   }
 
   function handleDragOver(event: DragEvent<HTMLDivElement>) {
@@ -137,14 +153,14 @@ function UploadPage({
     event.preventDefault()
     setIsDragging(false)
     if (!isWorking) {
-      onFileSelected(event.dataTransfer.files?.[0])
+      onFilesSelected(Array.from(event.dataTransfer.files ?? []))
     }
   }
 
   return (
     <section className="w-full space-y-6">
       <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-stretch">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-stretch">
           <div className="flex flex-col justify-between gap-8">
             <div className="max-w-3xl space-y-4">
               <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.eyebrow}</p>
@@ -170,20 +186,21 @@ function UploadPage({
                     <UploadCloud size={24} strokeWidth={1.8} />
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-lg font-semibold text-[rgb(var(--text-primary))]">
-                      {file ? file.name : COPY.dropTitle}
+                    <p className="truncate text-lg font-semibold text-[rgb(var(--text-primary))]" title={selectedFileLabel}>
+                      {files.length ? selectedFileLabel : COPY.dropTitle}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">
-                      {file ? `1 file · ${COPY.fileHint}` : COPY.dropSubtitle}
+                      {files.length ? `${files.length} files - ${COPY.fileHint}` : COPY.dropSubtitle}
                     </p>
                   </div>
                 </div>
                 <label className="glass-button inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-semibold">
                   <UploadCloud size={17} strokeWidth={1.8} />
-                  {COPY.selectFile}
+                  {COPY.selectFiles}
                   <input
                     className="sr-only"
                     type="file"
+                    multiple
                     accept=".db,.sqlite,.sqlite3,.json,.csv,.txt"
                     disabled={isWorking}
                     onChange={handleInputChange}
@@ -232,24 +249,13 @@ function UploadPage({
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/55 bg-white/[0.34] p-5 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">{COPY.statusTitle}</p>
-                <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{statusLabel}</p>
-              </div>
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-white/55 text-[#34c759] shadow-soft dark:bg-white/10">
-                <CheckCircle2 size={19} strokeWidth={1.8} />
-              </span>
-            </div>
-
-            <div className="mt-6 grid gap-3">
-              <StatusRow label={COPY.selectedFile} value={file ? file.name : COPY.noFile} />
-              <StatusRow label={COPY.fileCount} value={file ? '1' : '0'} />
-              <StatusRow label={COPY.parsedMessages} value={String(messageCount)} />
-              <StatusRow label={COPY.uploadPercent} value={`${progressValue}%`} />
-            </div>
-          </div>
+          <RelationMapPanel
+            fileCount={files.length}
+            messageCount={messageCount}
+            progressValue={progressValue}
+            selectedFileLabel={selectedFileLabel}
+            statusLabel={statusLabel}
+          />
         </div>
       </GlassCard>
 
@@ -268,6 +274,100 @@ function StatusRow({ label, value }: { label: string; value: string }) {
     <div className="rounded-[18px] bg-white/[0.36] px-4 py-3 dark:bg-white/[0.06]">
       <p className="text-xs font-medium text-[rgb(var(--text-muted))]">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold text-[rgb(var(--text-primary))]">{value}</p>
+    </div>
+  )
+}
+
+function RelationMapPanel({
+  fileCount,
+  messageCount,
+  progressValue,
+  selectedFileLabel,
+  statusLabel,
+}: {
+  fileCount: number
+  messageCount: number
+  progressValue: number
+  selectedFileLabel: string
+  statusLabel: string
+}) {
+  const hasFiles = fileCount > 0
+
+  return (
+    <div className="flex min-h-[430px] flex-col justify-between rounded-[28px] border border-white/55 bg-white/[0.34] p-5 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
+      <div>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">{COPY.relationshipMap}</p>
+            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">
+              {hasFiles ? COPY.graphHintReady : COPY.graphHintIdle}
+            </p>
+          </div>
+          <span className="inline-flex min-h-9 items-center rounded-full bg-white/[0.5] px-3 text-xs font-semibold text-[#34c759] shadow-soft dark:bg-white/10">
+            {statusLabel}
+          </span>
+        </div>
+
+        <div className="relative mt-7 h-56 overflow-hidden rounded-[26px] border border-white/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.42),rgba(255,255,255,0.18))] dark:border-white/10 dark:bg-white/[0.05]">
+          <div className="absolute left-[18%] top-[42%] h-px w-[64%] bg-[linear-gradient(90deg,rgba(0,122,255,0.16),rgba(90,200,250,0.78),rgba(52,199,89,0.18))]" />
+          <div
+            className={`absolute left-[19%] top-[31%] grid h-20 w-20 place-items-center rounded-full border border-white/70 bg-white/[0.72] text-sm font-semibold shadow-soft transition dark:border-white/10 dark:bg-white/[0.1] ${
+              hasFiles ? 'text-[#007aff]' : 'text-[rgb(var(--text-muted))]'
+            }`}
+          >
+            A
+          </div>
+          <div
+            className={`absolute right-[19%] top-[31%] grid h-20 w-20 place-items-center rounded-full border border-white/70 bg-white/[0.72] text-sm font-semibold shadow-soft transition dark:border-white/10 dark:bg-white/[0.1] ${
+              hasFiles ? 'text-[#ff2d55]' : 'text-[rgb(var(--text-muted))]'
+            }`}
+          >
+            B
+          </div>
+
+          <GraphNode className="left-[42%] top-[14%]" label={'\u6d88\u606f'} active={hasFiles} color="#5ac8fa" />
+          <GraphNode className="left-[32%] bottom-[14%]" label={'\u60c5\u7eea'} active={hasFiles} color="#ff9f0a" />
+          <GraphNode className="right-[30%] bottom-[14%]" label={'\u8282\u594f'} active={hasFiles} color="#34c759" />
+
+          <div
+            className="absolute inset-x-8 bottom-5 h-1.5 overflow-hidden rounded-full bg-white/50 dark:bg-white/10"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300"
+              style={{ width: `${progressValue}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+        <StatusRow label={COPY.selectedFile} value={selectedFileLabel || COPY.noFile} />
+        <StatusRow label={COPY.fileCount} value={String(fileCount)} />
+        <StatusRow label={COPY.parsedMessages} value={String(messageCount)} />
+        <StatusRow label={COPY.uploadPercent} value={`${progressValue}%`} />
+      </div>
+    </div>
+  )
+}
+
+function GraphNode({
+  active,
+  className,
+  color,
+  label,
+}: {
+  active: boolean
+  className: string
+  color: string
+  label: string
+}) {
+  return (
+    <div
+      className={`absolute grid h-12 w-12 place-items-center rounded-full border border-white/70 bg-white/[0.66] text-[11px] font-semibold shadow-soft transition dark:border-white/10 dark:bg-white/[0.1] ${className}`}
+      style={{ color: active ? color : 'rgb(var(--text-muted))' }}
+    >
+      {label}
     </div>
   )
 }
@@ -391,7 +491,7 @@ function HistoryPanel({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[rgb(var(--text-primary))]">{item.fileName}</p>
                   <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">
-                    {item.messageCount} messages · {formatDate(item.createdAt)}
+                    {item.messageCount} messages - {formatDate(item.createdAt)}
                   </p>
                 </div>
                 <span className="rounded-full bg-white/[0.45] px-3 py-1 text-xs font-semibold text-[#007aff] dark:bg-white/[0.08]">

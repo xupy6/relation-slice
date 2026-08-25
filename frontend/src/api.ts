@@ -24,6 +24,23 @@ export async function uploadChatFile(file: File, onProgress?: (progress: number)
   return unwrap(response.data)
 }
 
+export async function uploadChatFiles(files: File[], onProgress?: (progress: number) => void) {
+  const form = new FormData()
+  files.forEach((file) => form.append('files', file))
+
+  const response = await api.post<ApiResponse<UploadResponse>>('/api/upload/batch', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (event: AxiosProgressEvent) => {
+      if (!event.total) {
+        return
+      }
+      onProgress?.(Math.round((event.loaded / event.total) * 100))
+    },
+  })
+
+  return unwrap(response.data)
+}
+
 export async function analyzeChat(chatMessages: ChatMessage[]) {
   const response = await api.post<ApiResponse<FinalReport>>('/api/analyze', {
     chat_messages: chatMessages,
