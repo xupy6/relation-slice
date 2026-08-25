@@ -543,26 +543,25 @@ button {
   height: 24px;
   flex: 0 0 24px;
   place-items: center;
-  border-radius: 9px;
-  color: white;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.96), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(232, 234, 238, 0.62));
+  color: rgba(18, 22, 30, 0.92);
   box-shadow:
-    0 8px 18px rgba(37, 47, 70, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    0 8px 18px rgba(37, 47, 70, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
 }
 
-.brand-icon-qq {
-  background: linear-gradient(145deg, #33a7ff, #007aff);
-}
-
-.brand-icon-wechat {
-  background: linear-gradient(145deg, #64d86b, #1aad19);
+.brand-icon svg {
+  display: block;
+  width: 17px;
+  height: 17px;
 }
 
 .brand-icon-github {
-  background: linear-gradient(145deg, #4b5563, #111827);
+  color: rgba(10, 12, 16, 0.94);
 }
 
 .liquid-loader {
@@ -712,6 +711,17 @@ button {
 
   .music-box-pin {
     border-color: rgba(244, 247, 251, 0.62);
+  }
+
+  .brand-icon {
+    border-color: rgba(255, 255, 255, 0.16);
+    background:
+      radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.18), transparent 38%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+    color: rgba(244, 247, 251, 0.92);
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
 
   .liquid-loader {

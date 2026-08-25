@@ -590,8 +590,49 @@ function isCloneView(view: AppView) {
 }
 
 function BrandIcon({ type }: { type: 'qq' | 'wechat' | 'github' }) {
-  const label = type === 'qq' ? 'QQ' : type === 'wechat' ? '微' : 'GH'
-  return <span className={`brand-icon brand-icon-${type}`}>{label}</span>
+  return (
+    <span className={`brand-icon brand-icon-${type}`} aria-hidden="true">
+      {type === 'qq' ? <QQIcon /> : type === 'wechat' ? <WeChatIcon /> : <GitHubIcon />}
+    </span>
+  )
+}
+
+function QQIcon() {
+  return (
+    <svg viewBox="0 0 24 24" role="img" focusable="false">
+      <ellipse cx="12" cy="9.2" rx="5.1" ry="6.1" fill="currentColor" />
+      <ellipse cx="12" cy="15.2" rx="6.1" ry="5.2" fill="currentColor" />
+      <ellipse cx="12" cy="15.4" rx="3.1" ry="3.5" fill="white" opacity="0.92" />
+      <circle cx="10.1" cy="8.2" r="0.7" fill="white" />
+      <circle cx="13.9" cy="8.2" r="0.7" fill="white" />
+      <path d="M10.4 10.3h3.2l-1.6 1.2z" fill="white" opacity="0.9" />
+      <path d="M6.5 14.2 3.9 18.5l3.9-.7M17.5 14.2l2.6 4.3-3.9-.7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function WeChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" role="img" focusable="false">
+      <path d="M4.2 10.5c0-3.2 3.2-5.8 7.1-5.8s7.1 2.6 7.1 5.8-3.2 5.8-7.1 5.8a8.4 8.4 0 0 1-2.1-.3l-3.1 1.5.8-2.4a5.6 5.6 0 0 1-2.7-4.6Z" fill="currentColor" />
+      <path d="M11.4 13.4c0-2.6 2.5-4.7 5.5-4.7s5.5 2.1 5.5 4.7a4.6 4.6 0 0 1-2.1 3.7l.6 2-2.5-1.1a6.6 6.6 0 0 1-1.5.2c-3 0-5.5-2.1-5.5-4.8Z" fill="white" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.4" />
+      <circle cx="8.8" cy="9.7" r="0.7" fill="white" />
+      <circle cx="13.5" cy="9.7" r="0.7" fill="white" />
+      <circle cx="15.2" cy="12.8" r="0.55" fill="currentColor" />
+      <circle cx="18.5" cy="12.8" r="0.55" fill="currentColor" />
+    </svg>
+  )
+}
+
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 24 24" role="img" focusable="false">
+      <path
+        d="M12 3.7c-4.6 0-8.3 3.7-8.3 8.3 0 3.7 2.4 6.8 5.8 7.9.4.1.6-.2.6-.4v-1.6c-2.4.5-2.9-1-2.9-1-.4-.9-.9-1.2-.9-1.2-.8-.5.1-.5.1-.5.8.1 1.3.9 1.3.9.7 1.3 2 1 2.4.8.1-.5.3-.9.5-1.1-1.9-.2-3.9-1-3.9-4.1 0-.9.3-1.7.9-2.3-.1-.2-.4-1.1.1-2.3 0 0 .7-.2 2.4.9.7-.2 1.4-.3 2.1-.3s1.4.1 2.1.3c1.6-1.1 2.4-.9 2.4-.9.5 1.2.2 2.1.1 2.3.5.6.8 1.4.8 2.3 0 3.2-2 3.9-3.9 4.1.3.3.6.8.6 1.6v2.1c0 .2.2.5.6.4 3.3-1.1 5.7-4.2 5.7-7.9 0-4.6-3.7-8.3-8.3-8.3Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
 }
 
 export default App
