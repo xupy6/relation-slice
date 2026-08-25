@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ExternalLink, Gift, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react'
+import { Gift, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react'
 
 import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, uploadChatFiles } from './api'
 import ClonePage from './pages/ClonePage'
@@ -329,7 +329,10 @@ function App() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
               </span>
             </button>
-            <div className="music-box-player" title={`${COPY.musicBox}: ${currentTrack.title}`}>
+            <div
+              className={`music-box-player ${isMusicPlaying ? 'music-box-playing' : ''}`}
+              title={`${COPY.musicBox}: ${currentTrack.title}`}
+            >
               <button type="button" className="music-control" aria-label={COPY.previousTrack} onClick={handlePreviousTrack}>
                 <SkipBack size={12} fill="currentColor" />
               </button>
@@ -481,12 +484,16 @@ function App() {
         )}
       </main>
 
-      <div className="fixed bottom-5 left-5 z-30">
+      <div
+        className="fixed bottom-5 left-5 z-30"
+        onMouseEnter={() => setIsMoreOpen(true)}
+        onMouseLeave={() => setIsMoreOpen(false)}
+      >
         <button
           type="button"
           className="more-trigger"
           aria-expanded={isMoreOpen}
-          onClick={() => setIsMoreOpen((current) => !current)}
+          onFocus={() => setIsMoreOpen(true)}
         >
           <MoreHorizontal size={17} strokeWidth={1.8} />
           {COPY.more}
@@ -542,15 +549,15 @@ function App() {
             {openMorePanel === 'contact' ? (
               <div className="mt-6 grid gap-3">
                 <a className="contact-link" href="tencent://message/?uin=2788637607&Site=&Menu=yes">
-                  <MessageCircle size={17} strokeWidth={1.8} />
+                  <BrandIcon type="qq" />
                   {COPY.qq}: 2788637607
                 </a>
                 <a className="contact-link" href="weixin://">
-                  <MessageCircle size={17} strokeWidth={1.8} />
+                  <BrandIcon type="wechat" />
                   {COPY.wechat}: xupy666
                 </a>
                 <a className="contact-link" href="https://github.com/xupy6" target="_blank" rel="noreferrer">
-                  <ExternalLink size={17} strokeWidth={1.8} />
+                  <BrandIcon type="github" />
                   {COPY.github}: xupy6
                 </a>
               </div>
@@ -580,6 +587,11 @@ function isRelationView(view: AppView) {
 
 function isCloneView(view: AppView) {
   return view === 'cloneUpload' || view === 'cloneChat'
+}
+
+function BrandIcon({ type }: { type: 'qq' | 'wechat' | 'github' }) {
+  const label = type === 'qq' ? 'QQ' : type === 'wechat' ? '微' : 'GH'
+  return <span className={`brand-icon brand-icon-${type}`}>{label}</span>
 }
 
 export default App

@@ -232,7 +232,7 @@ function UploadPage({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-3 sm:flex-row">
                 <GlassButton
-                  className="inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
+                  className="primary-gradient-button inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
                   disabled={isWorking}
                   onClick={onAnalyze}
                 >

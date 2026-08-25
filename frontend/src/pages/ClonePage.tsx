@@ -195,7 +195,7 @@ function ClonePage({
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <GlassButton
-                className="inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
+                className="primary-gradient-button inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-sm font-semibold"
                 disabled={!files.length || isWorking}
                 onClick={onDistill}
               >
@@ -237,7 +237,7 @@ function ClonePage({
       </div>
 
       {activePanel === 'chat' ? (
-      <GlassCard className="apple-panel flex h-[calc(100vh-130px)] min-h-[620px] flex-col p-5 sm:p-6">
+      <GlassCard className="apple-panel chat-room-panel flex h-[calc(100vh-130px)] min-h-[620px] flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-white/55 text-[#007aff] shadow-soft dark:bg-white/10">
