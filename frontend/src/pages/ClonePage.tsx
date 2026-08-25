@@ -280,7 +280,7 @@ function ClonePage({
 
         <form className="mt-4 flex gap-3" onSubmit={handleSubmit}>
           <input
-            className="min-h-12 flex-1 rounded-full border border-white/60 bg-white/[0.52] px-5 text-sm text-[rgb(var(--text-primary))] shadow-soft outline-none transition placeholder:text-[rgb(var(--text-muted))] focus:border-[#007aff]/60 dark:border-white/10 dark:bg-white/[0.08]"
+            className="chat-input min-h-12 flex-1 rounded-full border border-white/60 bg-white/[0.52] px-5 text-sm text-[rgb(var(--text-primary))] shadow-soft outline-none transition placeholder:text-[rgb(var(--text-muted))] focus:border-[#007aff]/60 dark:border-white/10 dark:bg-white/[0.08]"
             disabled={!profile || status === 'chatting'}
             placeholder={COPY.inputPlaceholder}
             value={draft}
