@@ -83,6 +83,12 @@ button {
   transform: translateY(0);
 }
 
+.glass-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
 .glass-button:focus-visible,
 .nav-pill:focus-visible,
 .nav-pill-active:focus-visible {

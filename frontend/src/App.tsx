@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import type { FinalReport } from './types'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
 
@@ -14,6 +15,17 @@ const COPY = {
 
 function App() {
   const [view, setView] = useState<AppView>('upload')
+  const [report, setReport] = useState<FinalReport | null>(null)
+
+  function handleAnalysisComplete(nextReport: FinalReport) {
+    setReport(nextReport)
+    setView('result')
+  }
+
+  function handleReset() {
+    setReport(null)
+    setView('upload')
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--app-bg))] text-[rgb(var(--text-primary))]">
@@ -56,7 +68,11 @@ function App() {
       </header>
 
       <main className="relative z-10 mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[800px] items-center px-5 py-10">
-        {view === 'upload' ? <UploadPage onPreviewResult={() => setView('result')} /> : <ResultPage />}
+        {view === 'upload' ? (
+          <UploadPage onAnalysisComplete={handleAnalysisComplete} />
+        ) : (
+          <ResultPage report={report} onReset={handleReset} />
+        )}
       </main>
     </div>
   )
