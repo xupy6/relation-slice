@@ -3,8 +3,15 @@ from uuid import uuid4
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
+from app.graph import run_analysis
 from app.parser import ChatParseError, parse_upload
+from app.parser import ChatMessage
+
+
+class AnalyzeRequest(BaseModel):
+    chat_messages: list[ChatMessage]
 
 
 app = FastAPI(
@@ -47,3 +54,16 @@ async def upload_chat_file(file: UploadFile = File(...)) -> dict[str, object]:
         await file.close()
 
     return {"chat_messages": [message.model_dump(mode="json") for message in messages]}
+
+
+@app.post("/api/analyze")
+async def analyze_chat(request: AnalyzeRequest) -> dict[str, object]:
+    if not request.chat_messages:
+        raise HTTPException(status_code=400, detail="chat_messages cannot be empty")
+
+    try:
+        report = run_analysis(request.chat_messages)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}") from exc
+
+    return report
