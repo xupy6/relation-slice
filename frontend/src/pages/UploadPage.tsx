@@ -63,6 +63,7 @@ const COPY = {
   dbText: '.db / .sqlite \u9700\u8981\u672c\u5730 WeChatMsg \u5bfc\u51fa\u914d\u7f6e\uff1b\u5931\u8d25\u65f6\u6539\u4f20\u5df2\u5bfc\u51fa\u6587\u4ef6\u3002',
   statusTitle: '\u5f53\u524d\u4efb\u52a1',
   selectedFile: '\u5df2\u9009\u6587\u4ef6',
+  fileCount: '\u6587\u4ef6\u6570',
   parsedMessages: '\u89e3\u6790\u6d88\u606f',
   uploadPercent: '\u4e0a\u4f20\u8fdb\u5ea6',
   noFile: '\u5c1a\u672a\u9009\u62e9',
@@ -173,7 +174,7 @@ function UploadPage({
                       {file ? file.name : COPY.dropTitle}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">
-                      {file ? COPY.fileHint : COPY.dropSubtitle}
+                      {file ? `1 file · ${COPY.fileHint}` : COPY.dropSubtitle}
                     </p>
                   </div>
                 </div>
@@ -244,6 +245,7 @@ function UploadPage({
 
             <div className="mt-6 grid gap-3">
               <StatusRow label={COPY.selectedFile} value={file ? file.name : COPY.noFile} />
+              <StatusRow label={COPY.fileCount} value={file ? '1' : '0'} />
               <StatusRow label={COPY.parsedMessages} value={String(messageCount)} />
               <StatusRow label={COPY.uploadPercent} value={`${progressValue}%`} />
             </div>
