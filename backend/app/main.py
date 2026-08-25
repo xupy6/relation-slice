@@ -7,8 +7,9 @@ from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from app.agents.clone import chat_with_clone, distill_clone
 from app.graph import run_analysis
 from app.logging_config import setup_logging
 from app.parser import ChatMessage
@@ -23,6 +24,16 @@ logger = logging.getLogger(__name__)
 
 class AnalyzeRequest(BaseModel):
     chat_messages: list[ChatMessage]
+
+
+class CloneDistillRequest(BaseModel):
+    chat_messages: list[ChatMessage]
+
+
+class CloneChatRequest(BaseModel):
+    profile: dict[str, object]
+    message: str
+    conversation: list[dict[str, str]] = Field(default_factory=list)
 
 
 app = FastAPI(
@@ -126,6 +137,34 @@ async def analyze_chat(request: AnalyzeRequest) -> dict[str, object]:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}") from exc
 
     return api_success(report)
+
+
+@app.post("/api/clone/distill", dependencies=[Depends(check_api_rate_limit)])
+async def distill_cyber_clone(request: CloneDistillRequest) -> dict[str, object]:
+    if not request.chat_messages:
+        raise HTTPException(status_code=400, detail="chat_messages cannot be empty")
+
+    try:
+        profile = distill_clone(request.chat_messages)
+    except Exception as exc:
+        logger.exception("Clone distillation failed")
+        raise HTTPException(status_code=500, detail=f"Clone distillation failed: {exc}") from exc
+
+    return api_success(profile)
+
+
+@app.post("/api/clone/chat", dependencies=[Depends(check_api_rate_limit)])
+async def chat_cyber_clone(request: CloneChatRequest) -> dict[str, object]:
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="message cannot be empty")
+
+    try:
+        reply = chat_with_clone(request.profile, request.conversation, request.message.strip())
+    except Exception as exc:
+        logger.exception("Clone chat failed")
+        raise HTTPException(status_code=500, detail=f"Clone chat failed: {exc}") from exc
+
+    return api_success({"reply": reply})
 
 
 @app.exception_handler(HTTPException)

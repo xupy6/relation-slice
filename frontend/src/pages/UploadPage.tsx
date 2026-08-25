@@ -1,6 +1,7 @@
 import {
   AlertCircle,
   BookOpen,
+  CheckCircle2,
   Clock3,
   Database,
   ExternalLink,
@@ -28,6 +29,7 @@ type UploadPageProps = {
   status: WorkStatus
   uploadProgress: number
   onAnalyze: () => void
+  onClearFiles: () => void
   onClearHistory: () => void
   onFilesSelected: (files?: File[]) => void
   onSelectHistory: (item: AnalysisHistoryItem) => void
@@ -73,6 +75,7 @@ const COPY = {
   historyTitle: '\u5386\u53f2\u8bb0\u5f55',
   emptyHistory: '\u5b8c\u6210\u5206\u6790\u540e\uff0c\u8bb0\u5f55\u4f1a\u4fdd\u5b58\u5728\u8fd9\u91cc\u3002',
   clearHistory: '\u6e05\u7a7a',
+  clearFiles: '\u6e05\u7a7a\u6587\u4ef6',
 }
 
 const guideSteps = [
@@ -122,6 +125,7 @@ function UploadPage({
   status,
   uploadProgress,
   onAnalyze,
+  onClearFiles,
   onClearHistory,
   onFilesSelected,
   onSelectHistory,
@@ -136,6 +140,7 @@ function UploadPage({
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     onFilesSelected(Array.from(event.target.files ?? []))
+    event.currentTarget.value = ''
   }
 
   function handleDragOver(event: DragEvent<HTMLDivElement>) {
@@ -158,10 +163,11 @@ function UploadPage({
   }
 
   return (
-    <section className="w-full space-y-6">
-      <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-stretch">
-          <div className="flex flex-col justify-between gap-8">
+    <section className="grid w-full gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="space-y-6">
+        <GlassCard className="apple-panel p-6 sm:p-8 lg:p-10">
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch">
+            <div className="flex flex-col justify-between gap-8">
             <div className="max-w-3xl space-y-4">
               <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.eyebrow}</p>
               <h1 className="text-5xl font-semibold leading-[1.04] text-[rgb(var(--text-primary))] sm:text-6xl">
@@ -247,22 +253,33 @@ function UploadPage({
 
               <LoadingIndicator label={statusLabel} />
             </div>
+            </div>
+
+            <StatusPanel
+              fileCount={files.length}
+              messageCount={messageCount}
+              progressValue={progressValue}
+              selectedFileLabel={selectedFileLabel}
+              statusLabel={statusLabel}
+              onClearFiles={onClearFiles}
+            />
           </div>
+        </GlassCard>
 
-          <RelationMapPanel
-            fileCount={files.length}
-            messageCount={messageCount}
-            progressValue={progressValue}
-            selectedFileLabel={selectedFileLabel}
-            statusLabel={statusLabel}
-          />
+        <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+          <ImportGuide onShowHelp={() => setShowExportHelp(true)} />
+          <HistoryPanel history={history} onClearHistory={onClearHistory} onSelectHistory={onSelectHistory} />
         </div>
-      </GlassCard>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <ImportGuide onShowHelp={() => setShowExportHelp(true)} />
-        <HistoryPanel history={history} onClearHistory={onClearHistory} onSelectHistory={onSelectHistory} />
       </div>
+
+      <aside className="2xl:sticky 2xl:top-24">
+        <RelationMapPanel
+          fileCount={files.length}
+          messageCount={messageCount}
+          progressValue={progressValue}
+          statusLabel={statusLabel}
+        />
+      </aside>
 
       {showExportHelp ? <ExportHelp onClose={() => setShowExportHelp(false)} /> : null}
     </section>
@@ -278,23 +295,68 @@ function StatusRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function RelationMapPanel({
+function StatusPanel({
   fileCount,
   messageCount,
   progressValue,
   selectedFileLabel,
   statusLabel,
+  onClearFiles,
 }: {
   fileCount: number
   messageCount: number
   progressValue: number
   selectedFileLabel: string
   statusLabel: string
+  onClearFiles: () => void
+}) {
+  return (
+    <div className="rounded-[28px] border border-white/55 bg-white/[0.34] p-5 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">{COPY.statusTitle}</p>
+          <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{statusLabel}</p>
+        </div>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-white/55 text-[#34c759] shadow-soft dark:bg-white/10">
+          <CheckCircle2 size={19} strokeWidth={1.8} />
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-3">
+        <StatusRow label={COPY.selectedFile} value={selectedFileLabel || COPY.noFile} />
+        <StatusRow label={COPY.fileCount} value={String(fileCount)} />
+        <StatusRow label={COPY.parsedMessages} value={String(messageCount)} />
+        <StatusRow label={COPY.uploadPercent} value={`${progressValue}%`} />
+      </div>
+
+      <button
+        type="button"
+        className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-white/[0.32] px-4 text-sm font-medium text-[rgb(var(--text-secondary))] shadow-soft transition hover:bg-white/[0.5] hover:text-[#ff3b30] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white/[0.08]"
+        disabled={!fileCount}
+        onClick={onClearFiles}
+      >
+        <X size={15} strokeWidth={1.8} />
+        {COPY.clearFiles}
+      </button>
+    </div>
+  )
+}
+
+function RelationMapPanel({
+  fileCount,
+  messageCount,
+  progressValue,
+  statusLabel,
+}: {
+  fileCount: number
+  messageCount: number
+  progressValue: number
+  statusLabel: string
 }) {
   const hasFiles = fileCount > 0
 
   return (
-    <div className="flex min-h-[430px] flex-col justify-between rounded-[28px] border border-white/55 bg-white/[0.34] p-5 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
+    <div className="flex min-h-[360px] flex-col justify-between rounded-[28px] border border-white/55 bg-white/[0.34] p-5 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
       <div>
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -341,11 +403,9 @@ function RelationMapPanel({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-        <StatusRow label={COPY.selectedFile} value={selectedFileLabel || COPY.noFile} />
+      <div className="mt-5 grid gap-3">
         <StatusRow label={COPY.fileCount} value={String(fileCount)} />
         <StatusRow label={COPY.parsedMessages} value={String(messageCount)} />
-        <StatusRow label={COPY.uploadPercent} value={`${progressValue}%`} />
       </div>
     </div>
   )
@@ -408,10 +468,18 @@ function ImportGuide({ onShowHelp }: { onShowHelp: () => void }) {
           {guideSteps.map((step, index) => {
             const Icon = step.icon
             return (
-              <div key={step.title} className="rounded-[22px] border border-white/50 bg-white/[0.28] p-4 dark:border-white/10 dark:bg-white/[0.05]">
+              <div
+                key={step.title}
+                className="relative overflow-hidden rounded-[24px] border border-white/60 bg-[linear-gradient(145deg,rgba(255,255,255,0.58),rgba(255,255,255,0.2))] p-4 shadow-soft backdrop-blur-2xl transition hover:-translate-y-0.5 hover:bg-white/[0.5] dark:border-white/10 dark:bg-white/[0.06]"
+              >
+                <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-white/80 dark:bg-white/20" />
                 <div className="flex items-center justify-between">
-                  <Icon size={18} strokeWidth={1.8} className="text-[#007aff]" />
-                  <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">0{index + 1}</span>
+                  <span className="grid h-9 w-9 place-items-center rounded-[15px] bg-white/[0.54] text-[#007aff] shadow-soft dark:bg-white/[0.08]">
+                    <Icon size={18} strokeWidth={1.8} />
+                  </span>
+                  <span className="rounded-full bg-white/[0.46] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-muted))] shadow-soft dark:bg-white/[0.08]">
+                    0{index + 1}
+                  </span>
                 </div>
                 <p className="mt-4 text-sm font-semibold text-[rgb(var(--text-primary))]">{step.title}</p>
                 <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{step.body}</p>

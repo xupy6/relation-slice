@@ -85,6 +85,23 @@ export type FinalReport = {
 
 export type WorkStatus = 'idle' | 'uploading' | 'analyzing' | 'error'
 
+export type CloneStatus = 'idle' | 'uploading' | 'distilling' | 'chatting' | 'error'
+
+export type CloneProfile = {
+  clone_name?: string
+  target_sender?: string
+  persona_summary?: string
+  speaking_style?: string[]
+  signature_phrases?: string[]
+  emotional_tone?: string
+  reply_rules?: string[]
+}
+
+export type CloneMessage = {
+  role: 'user' | 'clone'
+  content: string
+}
+
 export type AnalysisHistoryItem = {
   id: string
   fileName: string

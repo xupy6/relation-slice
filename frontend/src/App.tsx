@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 
-import { analyzeChat, getApiErrorMessage, uploadChatFiles } from './api'
+import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, uploadChatFiles } from './api'
+import ClonePage from './pages/ClonePage'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
 import { loadHistory, saveHistory } from './storage'
-import type { AnalysisHistoryItem, FinalReport, WorkStatus } from './types'
+import type { AnalysisHistoryItem, CloneMessage, CloneProfile, CloneStatus, FinalReport, WorkStatus } from './types'
 
-type AppView = 'upload' | 'result'
+type AppView = 'upload' | 'result' | 'clone'
 
 const COPY = {
-  appName: '\u5173\u7cfb\u5207\u7247',
+  appName: '\u6d88\u5931\u7684TA',
   backToUpload: '\u56de\u5230\u4e0a\u4f20\u9875',
   upload: '\u4e0a\u4f20',
   result: '\u7ed3\u679c',
+  clone: '\u8d5b\u535a\u514b\u9686',
   missingFile: '\u8bf7\u5148\u9009\u62e9\u804a\u5929\u8bb0\u5f55\u6587\u4ef6\u3002',
 }
 
@@ -25,6 +27,10 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [messageCount, setMessageCount] = useState(0)
   const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => loadHistory())
+  const [cloneProfile, setCloneProfile] = useState<CloneProfile | null>(null)
+  const [cloneMessages, setCloneMessages] = useState<CloneMessage[]>([])
+  const [cloneStatus, setCloneStatus] = useState<CloneStatus>('idle')
+  const [cloneError, setCloneError] = useState<string | null>(null)
 
   useEffect(() => {
     saveHistory(history)
@@ -35,11 +41,27 @@ function App() {
       return
     }
 
-    setFiles(nextFiles)
+    setFiles((current) => mergeFiles(current, nextFiles))
     setStatus('idle')
     setError(null)
+    setCloneProfile(null)
+    setCloneMessages([])
+    setCloneStatus('idle')
+    setCloneError(null)
     setUploadProgress(0)
     setMessageCount(0)
+  }
+
+  function handleClearFiles() {
+    setFiles([])
+    setUploadProgress(0)
+    setMessageCount(0)
+    setError(null)
+    setCloneError(null)
+    setCloneProfile(null)
+    setCloneMessages([])
+    setStatus('idle')
+    setCloneStatus('idle')
   }
 
   async function handleAnalyze() {
@@ -95,6 +117,54 @@ function App() {
     setHistory([])
   }
 
+  async function handleDistillClone() {
+    if (!files.length) {
+      setCloneError(COPY.missingFile)
+      setCloneStatus('error')
+      return
+    }
+
+    try {
+      setCloneError(null)
+      setCloneStatus('uploading')
+      setUploadProgress(0)
+      setMessageCount(0)
+
+      const upload = await uploadChatFiles(files, setUploadProgress)
+      setMessageCount(upload.chat_messages.length)
+
+      setCloneStatus('distilling')
+      const profile = await distillClone(upload.chat_messages)
+      setCloneProfile(profile)
+      setCloneMessages([])
+      setCloneStatus('idle')
+      setUploadProgress(100)
+    } catch (nextError) {
+      setCloneError(getApiErrorMessage(nextError))
+      setCloneStatus('error')
+    }
+  }
+
+  async function handleCloneSend(message: string) {
+    if (!cloneProfile || cloneStatus === 'chatting') {
+      return
+    }
+
+    const nextConversation: CloneMessage[] = [...cloneMessages, { role: 'user', content: message }]
+    setCloneMessages(nextConversation)
+    setCloneError(null)
+    setCloneStatus('chatting')
+
+    try {
+      const response = await chatWithClone(cloneProfile, message, nextConversation)
+      setCloneMessages([...nextConversation, { role: 'clone', content: response.reply }])
+      setCloneStatus('idle')
+    } catch (nextError) {
+      setCloneError(getApiErrorMessage(nextError))
+      setCloneStatus('error')
+    }
+  }
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--app-bg))] text-[rgb(var(--text-primary))]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.92),transparent_28%),linear-gradient(135deg,rgba(238,247,255,0.96),rgba(255,255,255,0.78)_42%,rgba(255,245,242,0.82))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.98),rgba(21,26,38,0.88)_48%,rgba(42,31,34,0.74))]" />
@@ -114,7 +184,7 @@ function App() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
               </span>
             </span>
-            <span>
+            <span className="text-center">
               <span className="block text-[15px] font-semibold leading-5">{COPY.appName}</span>
               <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
             </span>
@@ -135,6 +205,13 @@ function App() {
             >
               {COPY.result}
             </button>
+            <button
+              type="button"
+              className={view === 'clone' ? 'nav-pill-active' : 'nav-pill'}
+              onClick={() => setView('clone')}
+            >
+              {COPY.clone}
+            </button>
           </div>
         </nav>
       </header>
@@ -149,9 +226,24 @@ function App() {
             status={status}
             uploadProgress={uploadProgress}
             onAnalyze={handleAnalyze}
+            onClearFiles={handleClearFiles}
             onClearHistory={handleClearHistory}
             onFilesSelected={handleFilesSelected}
             onSelectHistory={handleSelectHistory}
+          />
+        ) : view === 'clone' ? (
+          <ClonePage
+            error={cloneError}
+            files={files}
+            messages={cloneMessages}
+            messageCount={messageCount}
+            profile={cloneProfile}
+            status={cloneStatus}
+            uploadProgress={uploadProgress}
+            onClearFiles={handleClearFiles}
+            onDistill={handleDistillClone}
+            onFilesSelected={handleFilesSelected}
+            onSend={handleCloneSend}
           />
         ) : (
           <ResultPage report={report} onReset={handleReset} />
@@ -159,6 +251,14 @@ function App() {
       </main>
     </div>
   )
+}
+
+function mergeFiles(current: File[], nextFiles: File[]) {
+  const byFingerprint = new Map<string, File>()
+  for (const file of [...current, ...nextFiles]) {
+    byFingerprint.set(`${file.name}-${file.size}-${file.lastModified}`, file)
+  }
+  return Array.from(byFingerprint.values())
 }
 
 export default App

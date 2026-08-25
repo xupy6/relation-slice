@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosProgressEvent } from 'axios'
 
-import type { ApiResponse, ChatMessage, FinalReport, UploadResponse } from './types'
+import type { ApiResponse, ChatMessage, CloneMessage, CloneProfile, FinalReport, UploadResponse } from './types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
@@ -44,6 +44,24 @@ export async function uploadChatFiles(files: File[], onProgress?: (progress: num
 export async function analyzeChat(chatMessages: ChatMessage[]) {
   const response = await api.post<ApiResponse<FinalReport>>('/api/analyze', {
     chat_messages: chatMessages,
+  })
+
+  return unwrap(response.data)
+}
+
+export async function distillClone(chatMessages: ChatMessage[]) {
+  const response = await api.post<ApiResponse<CloneProfile>>('/api/clone/distill', {
+    chat_messages: chatMessages,
+  })
+
+  return unwrap(response.data)
+}
+
+export async function chatWithClone(profile: CloneProfile, message: string, conversation: CloneMessage[]) {
+  const response = await api.post<ApiResponse<{ reply: string }>>('/api/clone/chat', {
+    profile,
+    message,
+    conversation,
   })
 
   return unwrap(response.data)
