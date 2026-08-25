@@ -5,6 +5,13 @@ import UploadPage from './pages/UploadPage'
 
 type AppView = 'upload' | 'result'
 
+const COPY = {
+  appName: '\u5173\u7cfb\u5207\u7247',
+  backToUpload: '\u56de\u5230\u4e0a\u4f20\u9875',
+  upload: '\u4e0a\u4f20',
+  result: '\u7ed3\u679c',
+}
+
 function App() {
   const [view, setView] = useState<AppView>('upload')
 
@@ -18,13 +25,13 @@ function App() {
             type="button"
             className="flex items-center gap-3 text-left"
             onClick={() => setView('upload')}
-            aria-label="回到上传页"
+            aria-label={COPY.backToUpload}
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/55 shadow-soft ring-1 ring-white/60 dark:bg-white/10 dark:ring-white/15">
               <span className="h-3.5 w-3.5 rounded-full bg-[#4f8cff]" />
             </span>
             <span>
-              <span className="block text-[15px] font-semibold leading-5">关系切片</span>
+              <span className="block text-[15px] font-semibold leading-5">{COPY.appName}</span>
               <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
             </span>
           </button>
@@ -35,14 +42,14 @@ function App() {
               className={view === 'upload' ? 'nav-pill-active' : 'nav-pill'}
               onClick={() => setView('upload')}
             >
-              上传
+              {COPY.upload}
             </button>
             <button
               type="button"
               className={view === 'result' ? 'nav-pill-active' : 'nav-pill'}
               onClick={() => setView('result')}
             >
-              结果
+              {COPY.result}
             </button>
           </div>
         </nav>

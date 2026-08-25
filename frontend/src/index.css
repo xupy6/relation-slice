@@ -111,6 +111,62 @@ button {
   box-shadow: 0 8px 22px rgba(37, 47, 70, 0.1);
 }
 
+.liquid-loader {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.96), transparent 24%),
+    linear-gradient(135deg, rgba(79, 140, 255, 0.86), rgba(83, 214, 181, 0.78));
+  box-shadow:
+    inset 0 1px 8px rgba(255, 255, 255, 0.58),
+    0 7px 20px rgba(79, 140, 255, 0.24);
+  animation: liquidPulse 1.8s ease-in-out infinite;
+}
+
+.liquid-loader::before {
+  position: absolute;
+  inset: 5px -4px -7px;
+  content: '';
+  border-radius: 45%;
+  background: rgba(255, 255, 255, 0.44);
+  animation: liquidWave 2.4s linear infinite;
+}
+
+.liquid-loader::after {
+  position: absolute;
+  inset: 3px;
+  content: '';
+  border-radius: inherit;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.55), transparent 58%);
+}
+
+@keyframes liquidPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes liquidWave {
+  from {
+    transform: translateY(2px) rotate(0deg);
+  }
+
+  to {
+    transform: translateY(2px) rotate(360deg);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .glass {
     border-color: rgba(255, 255, 255, 0.12);
@@ -132,5 +188,12 @@ button {
   .nav-pill-active {
     background: rgba(255, 255, 255, 0.16);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  }
+
+  .liquid-loader {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow:
+      inset 0 1px 8px rgba(255, 255, 255, 0.18),
+      0 8px 24px rgba(79, 140, 255, 0.2);
   }
 }
