@@ -7,7 +7,7 @@ import re
 import shlex
 import subprocess
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -113,11 +113,8 @@ def _parse_image_ocr(path: Path) -> list[ChatMessage]:
 
     try:
         return _parse_text_lines(text.splitlines())
-    except ChatParseError as exc:
-        raise ChatParseError(
-            "Screenshot OCR text was extracted, but it did not match a supported chat format. "
-            "Use screenshots that show timestamps and sender names, or upload exported JSON/CSV/TXT."
-        ) from exc
+    except ChatParseError:
+        return _parse_ocr_fallback_lines(text.splitlines())
 
 
 def _parse_text_lines(lines: list[str]) -> list[ChatMessage]:
@@ -154,6 +151,44 @@ def _parse_text_lines(lines: list[str]) -> list[ChatMessage]:
         )
 
     return _normalize_records(records)
+
+
+def _parse_ocr_fallback_lines(lines: list[str]) -> list[ChatMessage]:
+    records: list[dict[str, str]] = []
+    base_time = datetime.now(timezone.utc)
+    sender_pattern = re.compile(r"^(?P<sender>[^:：]{1,24})[:：]\s*(?P<content>.+)$")
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or _is_ocr_noise_line(stripped):
+            continue
+
+        match = sender_pattern.match(stripped)
+        sender = match.group("sender").strip() if match else f"截图用户{chr(65 + (len(records) % 2))}"
+        content = match.group("content").strip() if match else stripped
+        if not content:
+            continue
+
+        records.append(
+            {
+                "timestamp": (base_time + timedelta(seconds=len(records) * 30)).isoformat(),
+                "sender": sender,
+                "content": content,
+                "msg_type": "ocr_text",
+            }
+        )
+
+    if not records:
+        raise ChatParseError("Screenshot OCR text was extracted, but no usable chat lines were found.")
+
+    return _normalize_records(records)
+
+
+def _is_ocr_noise_line(text: str) -> bool:
+    normalized = re.sub(r"\s+", "", text).lower()
+    if len(normalized) <= 1:
+        return True
+    return normalized in {"微信", "wechat", "聊天信息", "聊天记录", "昨天", "今天"}
 
 
 def _parse_wechat_database(path: Path) -> list[ChatMessage]:

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app.parser import ChatParseError, parse_upload
+from app.parser import ChatParseError, _parse_ocr_fallback_lines, parse_upload
 
 
 class ParseUploadFallbackTest(unittest.TestCase):
@@ -68,6 +68,14 @@ class ParseUploadFallbackTest(unittest.TestCase):
                 parse_upload(str(path))
 
         self.assertIn("already exported", str(raised.exception))
+
+    def test_ocr_fallback_without_timestamp_infers_messages(self):
+        messages = _parse_ocr_fallback_lines(["微信", "你吃饭了吗", "吃了，刚到家", "Alice: 明天见"])
+
+        self.assertEqual(len(messages), 3)
+        self.assertEqual(messages[0].sender, "截图用户A")
+        self.assertEqual(messages[1].sender, "截图用户B")
+        self.assertEqual(messages[2].sender, "Alice")
 
 
 if __name__ == "__main__":

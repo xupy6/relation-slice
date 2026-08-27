@@ -14,7 +14,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react'
-import { type ChangeEvent, type DragEvent, type FormEvent, useState } from 'react'
+import { type ChangeEvent, type DragEvent, type FormEvent, useEffect, useRef, useState } from 'react'
 
 import { GlassButton, GlassCard, LoadingIndicator } from '../components'
 import type { CloneHistoryItem, CloneMessage, CloneProfile, CloneStatus } from '../types'
@@ -71,6 +71,13 @@ const COPY = {
   heatmapEmpty: '开始对话后，这里会显示聊天频率。',
 }
 
+Object.assign(COPY, {
+  voiceOn: '克隆声音已开启',
+  voiceOff: '克隆声音',
+  heatmap: '聊天频率',
+  heatmapEmpty: '开始对话后，这里会显示聊天频率。',
+})
+
 function ClonePage({
   activePanel,
   error,
@@ -93,9 +100,16 @@ function ClonePage({
   const [isDragging, setIsDragging] = useState(false)
   const [draft, setDraft] = useState('')
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
   const isWorking = status === 'uploading' || status === 'distilling' || status === 'chatting'
   const statusLabel = getStatusLabel(status, files.length)
   const selectedFileLabel = getSelectedFileLabel(files)
+
+  useEffect(() => {
+    if (activePanel === 'chat' && profile && status !== 'uploading' && status !== 'distilling') {
+      inputRef.current?.focus()
+    }
+  }, [activePanel, profile, status, messages.length])
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     onFilesSelected(Array.from(event.target.files ?? []))
@@ -312,8 +326,9 @@ function ClonePage({
 
         <form className="mt-4 flex gap-3" onSubmit={handleSubmit}>
           <input
+            ref={inputRef}
             className="chat-input min-h-12 flex-1 rounded-full border border-white/60 bg-white/[0.52] px-5 text-sm text-[rgb(var(--text-primary))] shadow-soft outline-none transition placeholder:text-[rgb(var(--text-muted))] focus:border-[#007aff]/60 dark:border-white/10 dark:bg-white/[0.08]"
-            disabled={!profile || status === 'chatting'}
+            disabled={!profile}
             placeholder={COPY.inputPlaceholder}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}

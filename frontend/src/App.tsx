@@ -58,10 +58,22 @@ const COPY = {
   github: 'GitHub',
   close: '\u5173\u95ed',
   missingFile: '\u8bf7\u5148\u9009\u62e9\u804a\u5929\u8bb0\u5f55\u6587\u4ef6\u3002',
-  disclaimerTitle: '使用前确认',
-  disclaimerBody:
-    '本平台仅用于本人拥有合法授权的聊天记录整理、趣味分析和 AI 模拟体验。不得用于诈骗、骚扰、冒充真人、侵犯隐私、违法违规或未经同意的声音/人格克隆场景。',
-  disclaimerCheck: '我确认拥有数据使用授权，并承诺不用于违法违规场景。',
+  disclaimerTitle: '使用协议与免责声明',
+  disclaimerSummary:
+    '使用前请确认：你拥有聊天记录、截图、声音或人格模拟相关数据的合法授权，并承诺仅用于个人整理、趣味分析和合规测试。',
+  disclaimerDetailButton: '查看详情',
+  disclaimerDetails: [
+    '1. 数据授权：你确认上传的聊天记录、截图、导出文件、昵称、语音线索及相关素材，均来自你本人或已获得相关权利人、聊天参与者的合法授权。',
+    '2. 隐私保护：你不得上传、传播、分析或保存他人的敏感个人信息、隐私内容、账号凭据、身份证件、财务信息、医疗信息或其他依法受保护的数据，除非你已获得明确授权并承担相应责任。',
+    '3. 使用边界：本平台仅用于聊天记录解析、关系趣味报告、AI 模拟对话、个人回忆整理和产品功能测试，不构成心理咨询、法律意见、医学建议或事实鉴定。',
+    '4. 禁止用途：严禁将本平台用于诈骗、骚扰、威胁、跟踪、冒充真人、诱导转账、侵犯名誉、侵犯隐私、违法取证、商业窃密、制作深度伪造欺骗内容或其他违法违规场景。',
+    '5. 赛博克隆限制：克隆结果只是基于文本风格的 AI 模拟，不代表真人本人、真实意愿或真实承诺。你不得把模拟回复包装成真人回复，不得用它误导第三方。',
+    '6. 声音功能限制：当前声音克隆仅预留接口并使用浏览器朗读兜底。未来接入真实声音模型时，必须获得声音权利人明确授权，不得制作未经同意的声音克隆。',
+    '7. OCR 与解析误差：截图 OCR、导出文件解析和 AI 分析可能出现识别错误、上下文缺失、时间推断不准或结论偏差。你应自行核验，不应把结果作为唯一依据。',
+    '8. 本地存储：当前开发版使用浏览器 localStorage 保存账号与历史记录，不适合作为生产级安全账号系统。请勿使用真实敏感密码。',
+    '9. 责任承担：因你上传数据、使用结果、传播报告或使用克隆内容产生的法律责任、伦理责任和第三方争议，由你自行承担。',
+  ],
+  disclaimerCheck: '我已阅读并同意协议，确认拥有数据使用授权，并承诺不用于违法违规场景。',
   agreeAndContinue: '同意并继续',
   loginTitle: '登录消失的TA',
   registerTitle: '注册账号',
@@ -72,12 +84,14 @@ const COPY = {
   switchToLogin: '已有账号，去登录',
   switchToRegister: '没有账号，去注册',
   logout: '退出',
+  loginRequired: '请先登录账号，历史记录会保存到对应用户下。',
 }
-
 function App() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadCurrentUser())
   const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(() => hasAcceptedDisclaimer())
   const [isDisclaimerChecked, setIsDisclaimerChecked] = useState(false)
+  const [showDisclaimerDetails, setShowDisclaimerDetails] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [authUsername, setAuthUsername] = useState('')
   const [authPassword, setAuthPassword] = useState('')
@@ -176,6 +190,9 @@ function App() {
   }
 
   async function handleAnalyze() {
+    if (!requireCurrentUser(setError)) {
+      return
+    }
     if (!files.length) {
       setError(COPY.missingFile)
       setStatus('error')
@@ -229,6 +246,9 @@ function App() {
   }
 
   async function handleDistillClone() {
+    if (!requireCurrentUser(setCloneError)) {
+      return
+    }
     if (!files.length) {
       setCloneError(COPY.missingFile)
       setCloneStatus('error')
@@ -378,6 +398,7 @@ function App() {
       setAuthError(null)
       const account = authMode === 'login' ? loginUser(authUsername, authPassword) : registerUser(authUsername, authPassword)
       setCurrentUser(account)
+      setIsAuthOpen(false)
       setAuthPassword('')
     } catch (nextError) {
       setAuthError(nextError instanceof Error ? nextError.message : '登录失败。')
@@ -390,6 +411,16 @@ function App() {
     setAuthPassword('')
   }
 
+  function requireCurrentUser(setter: (message: string | null) => void) {
+    if (currentUser) {
+      return true
+    }
+
+    setter((COPY as any).loginRequired)
+    setIsAuthOpen(true)
+    return false
+  }
+
   const activeNavGroup: NavGroup = isRelationView(view) ? 'relation' : 'clone'
   const liquidNavGroup = hoveredNavGroup ?? activeNavGroup
   const relationSubView = hoveredRelationSubView ?? (view === 'result' ? 'result' : 'upload')
@@ -400,7 +431,7 @@ function App() {
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--app-bg))] text-[rgb(var(--text-primary))]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.92),transparent_28%),linear-gradient(135deg,rgba(238,247,255,0.96),rgba(255,255,255,0.78)_42%,rgba(255,245,242,0.82))] dark:bg-[linear-gradient(135deg,rgba(14,20,31,0.98),rgba(21,26,38,0.88)_48%,rgba(42,31,34,0.74))]" />
 
-      <header className="sticky top-0 z-20 border-b border-white/55 bg-[linear-gradient(90deg,rgba(255,255,255,0.7),rgba(238,247,255,0.64)_36%,rgba(255,245,250,0.58)_72%,rgba(255,255,255,0.7))] backdrop-blur-2xl dark:border-white/10 dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.08),rgba(92,140,255,0.1)_44%,rgba(255,120,170,0.08))]">
+      <header className="fixed inset-x-0 top-0 z-20 border-b border-white/55 bg-[linear-gradient(90deg,rgba(255,255,255,0.7),rgba(238,247,255,0.64)_36%,rgba(255,245,250,0.58)_72%,rgba(255,255,255,0.7))] backdrop-blur-2xl dark:border-white/10 dark:bg-[linear-gradient(90deg,rgba(255,255,255,0.08),rgba(92,140,255,0.1)_44%,rgba(255,120,170,0.08))]">
         <nav className="relative flex h-14 w-full items-center justify-between px-4 sm:px-6">
           <div className="ml-2 flex items-center gap-6">
             <button
@@ -460,6 +491,7 @@ function App() {
             <span className="block text-xs leading-4 text-[rgb(var(--text-muted))]">Relation Slice</span>
           </button>
 
+          <div className="right-controls">
           <div
             className="nav-shell"
             data-mode={activeNavGroup}
@@ -535,11 +567,16 @@ function App() {
               <span>{currentUser.username}</span>
               <LogOut size={14} strokeWidth={1.8} />
             </button>
-          ) : null}
+          ) : (
+            <button type="button" className="user-chip" onClick={() => setIsAuthOpen(true)}>
+              {COPY.login}
+            </button>
+          )}
+          </div>
         </nav>
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100vh-56px)] w-full items-start px-3 py-5 sm:px-6 sm:py-8 2xl:px-8">
+      <main className="relative z-10 flex min-h-screen w-full items-start px-3 pb-5 pt-20 sm:px-6 sm:pb-8 2xl:px-8">
         {view === 'upload' ? (
           <UploadPage
             error={error}
@@ -667,10 +704,26 @@ function App() {
 
       {!isDisclaimerAccepted ? (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-white/[0.42] px-4 backdrop-blur-2xl dark:bg-black/[0.36]">
-          <div className="glass apple-panel w-full max-w-lg p-6 sm:p-7">
+          <div className="glass apple-panel w-full max-w-2xl p-6 sm:p-7">
             <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.appName}</p>
             <h2 className="mt-2 text-2xl font-semibold">{COPY.disclaimerTitle}</h2>
-            <p className="mt-4 text-sm leading-7 text-[rgb(var(--text-secondary))]">{COPY.disclaimerBody}</p>
+            <p className="mt-4 text-sm leading-7 text-[rgb(var(--text-secondary))]">{(COPY as any).disclaimerSummary}</p>
+            <button
+              type="button"
+              className="mt-4 rounded-full bg-white/[0.34] px-4 py-2 text-sm font-semibold text-[#007aff] shadow-soft transition hover:bg-white/[0.52] dark:bg-white/[0.08]"
+              onClick={() => setShowDisclaimerDetails((current) => !current)}
+            >
+              {(COPY as any).disclaimerDetailButton}
+            </button>
+            {showDisclaimerDetails ? (
+              <div className="mt-4 max-h-[34vh] space-y-3 overflow-y-auto rounded-[24px] bg-white/[0.28] p-4 shadow-soft dark:bg-white/[0.06]">
+                {((COPY as any).disclaimerDetails as string[]).map((item) => (
+                  <p key={item} className="text-sm leading-7 text-[rgb(var(--text-secondary))]">
+                    {item}
+                  </p>
+                ))}
+              </div>
+            ) : null}
             <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[22px] bg-white/[0.34] p-4 text-sm leading-6 text-[rgb(var(--text-secondary))] shadow-soft dark:bg-white/[0.06]">
               <input
                 className="mt-1 h-4 w-4 accent-[#007aff]"
@@ -692,21 +745,28 @@ function App() {
         </div>
       ) : null}
 
-      {isDisclaimerAccepted && !currentUser ? (
+      {isAuthOpen ? (
         <div className="fixed inset-0 z-[65] grid place-items-center bg-white/[0.34] px-4 backdrop-blur-2xl dark:bg-black/[0.28]">
           <form className="glass apple-panel w-full max-w-sm p-6 sm:p-7" onSubmit={handleAuthSubmit}>
-            <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.appName}</p>
-            <h2 className="mt-2 text-2xl font-semibold">{authMode === 'login' ? COPY.loginTitle : COPY.registerTitle}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.appName}</p>
+                <h2 className="mt-2 text-2xl font-semibold">{authMode === 'login' ? COPY.loginTitle : COPY.registerTitle}</h2>
+              </div>
+              <button type="button" className="chat-tool-button" aria-label={COPY.close} onClick={() => setIsAuthOpen(false)}>
+                <X size={16} strokeWidth={1.8} />
+              </button>
+            </div>
             <div className="mt-6 grid gap-3">
               <input
                 className="auth-input"
-                placeholder={`${COPY.username}（至少3位）`}
+                placeholder={`${COPY.username} (3+)`}
                 value={authUsername}
                 onChange={(event) => setAuthUsername(event.target.value)}
               />
               <input
                 className="auth-input"
-                placeholder={`${COPY.password}（至少6位）`}
+                placeholder={`${COPY.password} (6+)`}
                 type="password"
                 value={authPassword}
                 onChange={(event) => setAuthPassword(event.target.value)}
