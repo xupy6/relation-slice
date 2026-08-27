@@ -38,6 +38,7 @@ const COPY = {
   emotion: '\u60c5\u7eea\u6ce2\u52a8',
   dependenceChart: '\u4f9d\u8d56\u5ea6\u5bf9\u6bd4',
   personality: '\u6027\u683c\u5149\u8c31',
+  mbti: 'MBTI 判断',
   suggestions: '\u8da3\u5473\u5efa\u8bae',
   summary: '\u5173\u7cfb\u6458\u8981',
   stableTag: '\u7a33\u5b9a\u966a\u4f34\u578b',
@@ -201,6 +202,10 @@ function ResultPage({ report, onReset }: ResultPageProps) {
               </RadarChart>
             </ResponsiveContainer>
           </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <MbtiBadge name={personA} value={languageReport.person_a?.mbti} />
+            <MbtiBadge name={personB} value={languageReport.person_b?.mbti} />
+          </div>
         </GlassCard>
       </div>
 
@@ -229,6 +234,15 @@ function ResultPage({ report, onReset }: ResultPageProps) {
 
 function ChartTitle({ title }: { title: string }) {
   return <h2 className="text-base font-semibold text-[rgb(var(--text-primary))]">{title}</h2>
+}
+
+function MbtiBadge({ name, value }: { name: string; value?: string }) {
+  return (
+    <div className="rounded-[18px] bg-white/[0.28] px-4 py-3 shadow-soft dark:bg-white/[0.06]">
+      <p className="text-xs font-medium text-[rgb(var(--text-muted))]">{name}</p>
+      <p className="mt-1 text-sm font-semibold text-[rgb(var(--text-primary))]">MBTI: {value || '观察中'}</p>
+    </div>
+  )
 }
 
 function clamp(value: number, min: number, max: number) {

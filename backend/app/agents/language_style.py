@@ -14,11 +14,12 @@ Analyze two people's wording habits, average sentence length, punctuation,
 emoji/sticker tendency, modal particles, and personality tendencies.
 Return exactly:
 {
-  "person_a": {"name": "...", "extroversion": 0.0, "rationality": 0.0, "emotionality": 0.0, "playfulness": 0.0},
-  "person_b": {"name": "...", "extroversion": 0.0, "rationality": 0.0, "emotionality": 0.0, "playfulness": 0.0},
+  "person_a": {"name": "...", "extroversion": 0.0, "rationality": 0.0, "emotionality": 0.0, "playfulness": 0.0, "mbti": "ENFP"},
+  "person_b": {"name": "...", "extroversion": 0.0, "rationality": 0.0, "emotionality": 0.0, "playfulness": 0.0, "mbti": "ISTJ"},
   "keywords_style": ["...", "..."]
 }
-Scores must be between 0 and 1.
+Scores must be between 0 and 1. MBTI is an entertainment inference from chat
+style, not a clinical or definitive personality assessment.
 """.strip()
 
 
@@ -26,8 +27,22 @@ def language_style_agent(state: "AnalysisState") -> dict[str, Any]:
     messages = state["chat_messages"]
     person_a, person_b = participant_names(messages)
     fallback = {
-        "person_a": {"name": person_a, "extroversion": 0.5, "rationality": 0.5, "emotionality": 0.5, "playfulness": 0.5},
-        "person_b": {"name": person_b, "extroversion": 0.5, "rationality": 0.5, "emotionality": 0.5, "playfulness": 0.5},
+        "person_a": {
+            "name": person_a,
+            "extroversion": 0.5,
+            "rationality": 0.5,
+            "emotionality": 0.5,
+            "playfulness": 0.5,
+            "mbti": "ENFP",
+        },
+        "person_b": {
+            "name": person_b,
+            "extroversion": 0.5,
+            "rationality": 0.5,
+            "emotionality": 0.5,
+            "playfulness": 0.5,
+            "mbti": "ISFJ",
+        },
         "keywords_style": ["温和", "日常", "轻松"],
     }
 

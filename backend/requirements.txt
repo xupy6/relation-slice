@@ -6,3 +6,5 @@ langchain-deepseek
 python-dotenv
 pydantic
 python-multipart
+pillow
+pytesseract

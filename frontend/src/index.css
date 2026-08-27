@@ -197,6 +197,100 @@ button {
   animation: inputGradientFlow 6s ease-in-out infinite;
 }
 
+.auth-input {
+  min-height: 46px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  padding: 0 18px;
+  color: rgb(var(--text-primary));
+  font-size: 14px;
+  outline: none;
+  box-shadow:
+    0 12px 30px rgba(37, 47, 70, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.auth-input:focus {
+  border-color: rgba(0, 122, 255, 0.48);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow:
+    0 14px 34px rgba(37, 47, 70, 0.13),
+    0 0 20px rgba(0, 122, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.user-chip {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  padding: 0 12px;
+  color: rgb(var(--text-secondary));
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow:
+    0 12px 30px rgba(37, 47, 70, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.user-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.74);
+  color: rgb(var(--text-primary));
+}
+
+.chat-tool-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  color: rgb(var(--text-secondary));
+  box-shadow:
+    0 10px 24px rgba(37, 47, 70, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.chat-tool-button:hover,
+.chat-tool-button-active {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.62);
+  color: #007aff;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-columns: 12px;
+  gap: 5px;
+  width: max-content;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background:
+    linear-gradient(145deg, rgba(48, 209, 88, 0.9), rgba(90, 200, 250, 0.76)),
+    rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 3px 8px rgba(37, 47, 70, 0.08);
+}
+
 .nav-shell {
   position: relative;
   display: flex;
@@ -722,6 +816,34 @@ button {
     box-shadow:
       0 14px 34px rgba(0, 0, 0, 0.22),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .auth-input,
+  .user-chip {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 14px 34px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .auth-input:focus,
+  .user-chip:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .chat-tool-button {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .chat-tool-button:hover,
+  .chat-tool-button-active {
+    background: rgba(255, 255, 255, 0.13);
+    color: #8fc2ff;
   }
 
   .nav-shell {

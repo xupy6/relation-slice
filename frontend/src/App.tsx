@@ -1,11 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
-import { Gift, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { Gift, LogOut, MessageCircle, MoreHorizontal, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react'
 
-import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, uploadChatFiles } from './api'
+import { analyzeChat, chatWithClone, distillClone, getApiErrorMessage, synthesizeCloneVoice, uploadChatFiles } from './api'
 import ClonePage from './pages/ClonePage'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
-import { loadCloneHistory, loadHistory, saveCloneHistory, saveHistory } from './storage'
+import {
+  acceptDisclaimer,
+  hasAcceptedDisclaimer,
+  loadCloneHistory,
+  loadCurrentUser,
+  loadHistory,
+  loginUser,
+  logoutUser,
+  registerUser,
+  saveCloneHistory,
+  saveHistory,
+} from './storage'
 import type {
   AnalysisHistoryItem,
   CloneHistoryItem,
@@ -13,6 +24,7 @@ import type {
   CloneProfile,
   CloneStatus,
   FinalReport,
+  UserAccount,
   WorkStatus,
 } from './types'
 
@@ -46,9 +58,30 @@ const COPY = {
   github: 'GitHub',
   close: '\u5173\u95ed',
   missingFile: '\u8bf7\u5148\u9009\u62e9\u804a\u5929\u8bb0\u5f55\u6587\u4ef6\u3002',
+  disclaimerTitle: '使用前确认',
+  disclaimerBody:
+    '本平台仅用于本人拥有合法授权的聊天记录整理、趣味分析和 AI 模拟体验。不得用于诈骗、骚扰、冒充真人、侵犯隐私、违法违规或未经同意的声音/人格克隆场景。',
+  disclaimerCheck: '我确认拥有数据使用授权，并承诺不用于违法违规场景。',
+  agreeAndContinue: '同意并继续',
+  loginTitle: '登录消失的TA',
+  registerTitle: '注册账号',
+  username: '用户名',
+  password: '密码',
+  login: '登录',
+  register: '注册',
+  switchToLogin: '已有账号，去登录',
+  switchToRegister: '没有账号，去注册',
+  logout: '退出',
 }
 
 function App() {
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadCurrentUser())
+  const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(() => hasAcceptedDisclaimer())
+  const [isDisclaimerChecked, setIsDisclaimerChecked] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [authUsername, setAuthUsername] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authError, setAuthError] = useState<string | null>(null)
   const [view, setView] = useState<AppView>('upload')
   const [report, setReport] = useState<FinalReport | null>(null)
   const [files, setFiles] = useState<File[]>([])
@@ -56,13 +89,15 @@ function App() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [messageCount, setMessageCount] = useState(0)
-  const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => loadHistory())
-  const [cloneHistory, setCloneHistory] = useState<CloneHistoryItem[]>(() => loadCloneHistory())
+  const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => loadHistory(currentUser?.username))
+  const [cloneHistory, setCloneHistory] = useState<CloneHistoryItem[]>(() => loadCloneHistory(currentUser?.username))
+  const [historyOwner, setHistoryOwner] = useState<string | null>(currentUser?.username ?? null)
   const [activeCloneHistoryId, setActiveCloneHistoryId] = useState<string | null>(null)
   const [cloneProfile, setCloneProfile] = useState<CloneProfile | null>(null)
   const [cloneMessages, setCloneMessages] = useState<CloneMessage[]>([])
   const [cloneStatus, setCloneStatus] = useState<CloneStatus>('idle')
   const [cloneError, setCloneError] = useState<string | null>(null)
+  const [cloneVoiceEnabled, setCloneVoiceEnabled] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [musicTrackIndex, setMusicTrackIndex] = useState(0)
   const [musicProgress, setMusicProgress] = useState(0)
@@ -74,12 +109,29 @@ function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    saveHistory(history)
-  }, [history])
+    setHistory(loadHistory(currentUser?.username))
+    setCloneHistory(loadCloneHistory(currentUser?.username))
+    setReport(null)
+    setCloneProfile(null)
+    setCloneMessages([])
+    setActiveCloneHistoryId(null)
+    setMessageCount(0)
+    setFiles([])
+    setView('upload')
+    setHistoryOwner(currentUser?.username ?? null)
+  }, [currentUser])
 
   useEffect(() => {
-    saveCloneHistory(cloneHistory)
-  }, [cloneHistory])
+    if (currentUser && historyOwner === currentUser.username) {
+      saveHistory(history, currentUser.username)
+    }
+  }, [currentUser, history, historyOwner])
+
+  useEffect(() => {
+    if (currentUser && historyOwner === currentUser.username) {
+      saveCloneHistory(cloneHistory, currentUser.username)
+    }
+  }, [cloneHistory, currentUser, historyOwner])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -268,20 +320,27 @@ function App() {
       return
     }
 
-    const nextConversation: CloneMessage[] = [...cloneMessages, { role: 'user', content: message }]
+    const nextConversation: CloneMessage[] = [...cloneMessages, { role: 'user', content: message, createdAt: new Date().toISOString() }]
     setCloneMessages(nextConversation)
     setCloneError(null)
     setCloneStatus('chatting')
 
     try {
       const response = await chatWithClone(cloneProfile, message, nextConversation)
-      const completedConversation: CloneMessage[] = [...nextConversation, { role: 'clone', content: response.reply }]
+      const completedConversation: CloneMessage[] = [
+        ...nextConversation,
+        { role: 'clone', content: response.reply, createdAt: new Date().toISOString() },
+      ]
       setCloneMessages(completedConversation)
       setCloneHistory((current) =>
         current.map((item) =>
           item.id === activeCloneHistoryId ? { ...item, messages: completedConversation, profile: cloneProfile } : item,
         ),
       )
+      if (cloneVoiceEnabled) {
+        void synthesizeCloneVoice(cloneProfile, response.reply).catch(() => null)
+        speakText(response.reply)
+      }
       setCloneStatus('idle')
     } catch (nextError) {
       setCloneError(getApiErrorMessage(nextError))
@@ -302,6 +361,33 @@ function App() {
   function handleClearCloneHistory() {
     setCloneHistory([])
     setActiveCloneHistoryId(null)
+  }
+
+  function handleAcceptDisclaimer() {
+    if (!isDisclaimerChecked) {
+      return
+    }
+
+    acceptDisclaimer()
+    setIsDisclaimerAccepted(true)
+  }
+
+  function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    try {
+      setAuthError(null)
+      const account = authMode === 'login' ? loginUser(authUsername, authPassword) : registerUser(authUsername, authPassword)
+      setCurrentUser(account)
+      setAuthPassword('')
+    } catch (nextError) {
+      setAuthError(nextError instanceof Error ? nextError.message : '登录失败。')
+    }
+  }
+
+  function handleLogout() {
+    logoutUser()
+    setCurrentUser(null)
+    setAuthPassword('')
   }
 
   const activeNavGroup: NavGroup = isRelationView(view) ? 'relation' : 'clone'
@@ -443,6 +529,13 @@ function App() {
               </div>
             ) : null}
           </div>
+
+          {currentUser ? (
+            <button type="button" className="user-chip" onClick={handleLogout} title={COPY.logout}>
+              <span>{currentUser.username}</span>
+              <LogOut size={14} strokeWidth={1.8} />
+            </button>
+          ) : null}
         </nav>
       </header>
 
@@ -472,12 +565,14 @@ function App() {
             status={cloneStatus}
             history={cloneHistory}
             uploadProgress={uploadProgress}
+            voiceEnabled={cloneVoiceEnabled}
             onClearFiles={handleClearFiles}
             onClearHistory={handleClearCloneHistory}
             onDistill={handleDistillClone}
             onFilesSelected={handleFilesSelected}
             onSend={handleCloneSend}
             onSelectHistory={handleSelectCloneHistory}
+            onToggleVoice={() => setCloneVoiceEnabled((current) => !current)}
           />
         ) : (
           <ResultPage report={report} onReset={handleReset} />
@@ -569,6 +664,71 @@ function App() {
           </div>
         </div>
       ) : null}
+
+      {!isDisclaimerAccepted ? (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-white/[0.42] px-4 backdrop-blur-2xl dark:bg-black/[0.36]">
+          <div className="glass apple-panel w-full max-w-lg p-6 sm:p-7">
+            <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.appName}</p>
+            <h2 className="mt-2 text-2xl font-semibold">{COPY.disclaimerTitle}</h2>
+            <p className="mt-4 text-sm leading-7 text-[rgb(var(--text-secondary))]">{COPY.disclaimerBody}</p>
+            <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[22px] bg-white/[0.34] p-4 text-sm leading-6 text-[rgb(var(--text-secondary))] shadow-soft dark:bg-white/[0.06]">
+              <input
+                className="mt-1 h-4 w-4 accent-[#007aff]"
+                type="checkbox"
+                checked={isDisclaimerChecked}
+                onChange={(event) => setIsDisclaimerChecked(event.target.checked)}
+              />
+              <span>{COPY.disclaimerCheck}</span>
+            </label>
+            <button
+              type="button"
+              className="primary-gradient-button glass-button mt-5 inline-flex min-h-12 w-full items-center justify-center px-5 text-sm font-semibold"
+              disabled={!isDisclaimerChecked}
+              onClick={handleAcceptDisclaimer}
+            >
+              {COPY.agreeAndContinue}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {isDisclaimerAccepted && !currentUser ? (
+        <div className="fixed inset-0 z-[65] grid place-items-center bg-white/[0.34] px-4 backdrop-blur-2xl dark:bg-black/[0.28]">
+          <form className="glass apple-panel w-full max-w-sm p-6 sm:p-7" onSubmit={handleAuthSubmit}>
+            <p className="text-sm font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.appName}</p>
+            <h2 className="mt-2 text-2xl font-semibold">{authMode === 'login' ? COPY.loginTitle : COPY.registerTitle}</h2>
+            <div className="mt-6 grid gap-3">
+              <input
+                className="auth-input"
+                placeholder={`${COPY.username}（至少3位）`}
+                value={authUsername}
+                onChange={(event) => setAuthUsername(event.target.value)}
+              />
+              <input
+                className="auth-input"
+                placeholder={`${COPY.password}（至少6位）`}
+                type="password"
+                value={authPassword}
+                onChange={(event) => setAuthPassword(event.target.value)}
+              />
+            </div>
+            {authError ? <p className="mt-3 text-sm leading-6 text-[#ff3b30]">{authError}</p> : null}
+            <button type="submit" className="primary-gradient-button glass-button mt-5 inline-flex min-h-12 w-full items-center justify-center px-5 text-sm font-semibold">
+              {authMode === 'login' ? COPY.login : COPY.register}
+            </button>
+            <button
+              type="button"
+              className="mt-3 min-h-10 w-full rounded-full text-sm font-medium text-[rgb(var(--text-secondary))] transition hover:bg-white/[0.3] hover:text-[rgb(var(--text-primary))] dark:hover:bg-white/[0.08]"
+              onClick={() => {
+                setAuthMode((current) => (current === 'login' ? 'register' : 'login'))
+                setAuthError(null)
+              }}
+            >
+              {authMode === 'login' ? COPY.switchToRegister : COPY.switchToLogin}
+            </button>
+          </form>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -587,6 +747,19 @@ function isRelationView(view: AppView) {
 
 function isCloneView(view: AppView) {
   return view === 'cloneUpload' || view === 'cloneChat'
+}
+
+function speakText(text: string) {
+  if (!('speechSynthesis' in window)) {
+    return
+  }
+
+  window.speechSynthesis.cancel()
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = /[\u4e00-\u9fa5]/.test(text) ? 'zh-CN' : 'en-US'
+  utterance.rate = 1
+  utterance.pitch = 1
+  window.speechSynthesis.speak(utterance)
 }
 
 function BrandIcon({ type }: { type: 'qq' | 'wechat' | 'github' }) {

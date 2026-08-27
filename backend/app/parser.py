@@ -29,7 +29,8 @@ SENDER_KEYS = ("sender", "Sender", "talker", "from", "user", "nickname", "displa
 CONTENT_KEYS = ("content", "Content", "text", "message", "msg", "StrContent", "\u5185\u5bb9", "\u6d88\u606f\u5185\u5bb9")
 TIME_KEYS = ("timestamp", "Timestamp", "time", "datetime", "create_time", "CreateTime", "\u65f6\u95f4", "\u6d88\u606f\u65f6\u95f4")
 TYPE_KEYS = ("msg_type", "type", "Type", "MsgType", "\u6d88\u606f\u7c7b\u578b", "\u7c7b\u578b")
-EXPORTED_FILE_TYPES = ".json, .csv, or .txt"
+EXPORTED_FILE_TYPES = ".json, .csv, .txt, or screenshot images"
+IMAGE_FILE_TYPES = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 
 
 def parse_upload(file_path: str) -> list[ChatMessage]:
@@ -44,6 +45,8 @@ def parse_upload(file_path: str) -> list[ChatMessage]:
         return _parse_csv(path)
     if suffix == ".txt":
         return _parse_text(path)
+    if suffix in IMAGE_FILE_TYPES:
+        return _parse_image_ocr(path)
     if suffix in {".db", ".sqlite", ".sqlite3"}:
         return _parse_wechat_database(path)
 
@@ -86,6 +89,38 @@ def _parse_text(path: Path) -> list[ChatMessage]:
         lines = path.read_text(encoding="utf-8-sig").splitlines()
     except UnicodeDecodeError as exc:
         raise ChatParseError("TXT exports must be UTF-8 encoded.") from exc
+
+    return _parse_text_lines(lines)
+
+
+def _parse_image_ocr(path: Path) -> list[ChatMessage]:
+    try:
+        import pytesseract
+        from PIL import Image
+    except ImportError as exc:
+        raise ChatParseError(
+            "Screenshot OCR requires optional dependencies pillow and pytesseract. "
+            "Install them and ensure the Tesseract OCR binary is available, or upload JSON/CSV/TXT exports."
+        ) from exc
+
+    try:
+        text = pytesseract.image_to_string(Image.open(path), lang=os.getenv("OCR_LANG", "chi_sim+eng"))
+    except Exception as exc:
+        raise ChatParseError(f"Screenshot OCR failed: {exc}") from exc
+
+    if not text.strip():
+        raise ChatParseError("Screenshot OCR did not find readable text.")
+
+    try:
+        return _parse_text_lines(text.splitlines())
+    except ChatParseError as exc:
+        raise ChatParseError(
+            "Screenshot OCR text was extracted, but it did not match a supported chat format. "
+            "Use screenshots that show timestamps and sender names, or upload exported JSON/CSV/TXT."
+        ) from exc
+
+
+def _parse_text_lines(lines: list[str]) -> list[ChatMessage]:
 
     records: list[dict[str, str]] = []
     current: dict[str, str] | None = None

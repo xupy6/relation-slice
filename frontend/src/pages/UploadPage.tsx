@@ -40,7 +40,7 @@ const COPY = {
   title: '\u5173\u7cfb\u5207\u7247',
   intro:
     '\u5bfc\u5165\u804a\u5929\u8bb0\u5f55\uff0c\u8ba9 AI \u628a\u4e24\u4e2a\u4eba\u7684\u8bed\u6c14\u3001\u8282\u594f\u548c\u60c5\u7eea\u56de\u58f0\u5207\u6210\u4e00\u4efd\u6e05\u723d\u7684\u5173\u7cfb\u62a5\u544a\u3002',
-  fileHint: '.db .sqlite .json .csv .txt',
+  fileHint: '.db .sqlite .json .csv .txt .png .jpg .webp',
   selectFiles: '\u9009\u62e9\u591a\u4e2a\u6587\u4ef6',
   analyze: '\u5f00\u59cb\u5206\u6790',
   retry: '\u91cd\u8bd5',
@@ -59,7 +59,7 @@ const COPY = {
   exportHelpLink: '\u6253\u5f00 WeChatMsg \u5b98\u65b9 GitHub',
   close: '\u5173\u95ed',
   supportTitle: '\u652f\u6301\u683c\u5f0f',
-  supportText: '\u6700\u7a33\u59a5\u7684\u662f JSON / CSV / TXT\uff0c\u4e0d\u4f9d\u8d56 WeChatMsg\u3002',
+  supportText: '\u6700\u7a33\u59a5\u7684\u662f JSON / CSV / TXT\uff1b\u622a\u56fe\u53ef\u5c1d\u8bd5 OCR \u89e3\u6790\u3002',
   dbTitle: '\u6570\u636e\u5e93\u6587\u4ef6',
   dbText: '.db / .sqlite \u9700\u8981\u672c\u5730 WeChatMsg \u5bfc\u51fa\u914d\u7f6e\uff1b\u5931\u8d25\u65f6\u6539\u4f20\u5df2\u5bfc\u51fa\u6587\u4ef6\u3002',
   statusTitle: '\u5f53\u524d\u4efb\u52a1',
@@ -207,7 +207,7 @@ function UploadPage({
                     className="sr-only"
                     type="file"
                     multiple
-                    accept=".db,.sqlite,.sqlite3,.json,.csv,.txt"
+                    accept=".db,.sqlite,.sqlite3,.json,.csv,.txt,.png,.jpg,.jpeg,.webp,.bmp"
                     disabled={isWorking}
                     onChange={handleInputChange}
                   />

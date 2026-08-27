@@ -1,0 +1,12 @@
+[
+  {"sender":"妈妈","content":"晚上回来吃饭吗？我炖了排骨。","timestamp":"2026-08-22 16:20:00","msg_type":"text"},
+  {"sender":"小北","content":"回，今天不加班。","timestamp":"2026-08-22 16:21:12","msg_type":"text"},
+  {"sender":"妈妈","content":"那我少放辣，你最近不是嗓子不舒服。","timestamp":"2026-08-22 16:22:44","msg_type":"text"},
+  {"sender":"小北","content":"行。爸血压药吃了吗？","timestamp":"2026-08-22 16:23:50","msg_type":"text"},
+  {"sender":"妈妈","content":"吃了，我盯着呢。你别操心我们，自己路上慢点。","timestamp":"2026-08-22 16:25:11","msg_type":"text"},
+  {"sender":"小北","content":"知道。顺路给你带水果？","timestamp":"2026-08-22 16:26:03","msg_type":"text"},
+  {"sender":"妈妈","content":"不用，家里还有。你人回来就行。","timestamp":"2026-08-22 16:27:22","msg_type":"text"},
+  {"sender":"小北","content":"那我买点酸奶吧。","timestamp":"2026-08-22 16:28:35","msg_type":"text"},
+  {"sender":"妈妈","content":"好，买你爱喝的那个。","timestamp":"2026-08-22 16:29:18","msg_type":"text"},
+  {"sender":"小北","content":"收到，马上出发。","timestamp":"2026-08-22 17:56:40","msg_type":"text"}
+]

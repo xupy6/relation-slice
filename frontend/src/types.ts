@@ -27,6 +27,7 @@ export type LanguagePersonReport = {
   rationality?: number
   emotionality?: number
   playfulness?: number
+  mbti?: string
 }
 
 export type LanguageReport = {
@@ -100,6 +101,7 @@ export type CloneProfile = {
 export type CloneMessage = {
   role: 'user' | 'clone'
   content: string
+  createdAt?: string
 }
 
 export type CloneHistoryItem = {
@@ -117,4 +119,16 @@ export type AnalysisHistoryItem = {
   messageCount: number
   createdAt: string
   report: FinalReport
+}
+
+export type UserAccount = {
+  username: string
+  createdAt: string
+}
+
+export type VoiceSynthesisResponse = {
+  status: 'reserved' | 'ready'
+  provider: string
+  audio_url?: string | null
+  message: string
 }

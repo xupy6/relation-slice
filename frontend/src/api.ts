@@ -1,6 +1,14 @@
 import axios, { AxiosError, type AxiosProgressEvent } from 'axios'
 
-import type { ApiResponse, ChatMessage, CloneMessage, CloneProfile, FinalReport, UploadResponse } from './types'
+import type {
+  ApiResponse,
+  ChatMessage,
+  CloneMessage,
+  CloneProfile,
+  FinalReport,
+  UploadResponse,
+  VoiceSynthesisResponse,
+} from './types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
@@ -62,6 +70,15 @@ export async function chatWithClone(profile: CloneProfile, message: string, conv
     profile,
     message,
     conversation,
+  })
+
+  return unwrap(response.data)
+}
+
+export async function synthesizeCloneVoice(profile: CloneProfile, text: string) {
+  const response = await api.post<ApiResponse<VoiceSynthesisResponse>>('/api/clone/voice', {
+    profile,
+    text,
   })
 
   return unwrap(response.data)

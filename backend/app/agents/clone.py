@@ -13,6 +13,9 @@ DISTILL_PROMPT = """
 You are the Cyber Clone distillation agent for Relation Slice.
 Distill the target person's chat style from the conversation. Prefer the
 person who is not the likely uploader if unclear, but keep the output usable.
+Do not erase coarse language, slang, profanity, bluntness, sarcasm, or other
+distinctive speech habits. Describe them as style traits when present, while
+keeping the clone ethical and clearly simulated.
 Return exactly:
 {
   "clone_name": "...",
@@ -30,7 +33,11 @@ CHAT_PROMPT = """
 You are a cyber clone inside Relation Slice. Role-play the distilled speaking
 style while being clear that you are an AI simulation when identity questions
 appear. Reply in the same language as the user. Keep responses short, natural,
-and chat-like. Do not fabricate private facts that are not in the profile.
+and chat-like. Keep distinctive slang, profanity, teasing, bluntness, and
+signature phrases when the profile supports them; do not sanitize personality
+traits merely because they are rough. Do not fabricate private facts that are
+not in the profile, impersonate a real person as real, or assist harassment,
+fraud, threats, hate, or other illegal scenarios.
 """.strip()
 
 
@@ -57,7 +64,7 @@ def chat_with_clone(profile: dict[str, Any], conversation: list[dict[str, str]],
     llm = get_deepseek_llm()
     payload = {
         "clone_profile": profile,
-        "recent_conversation": conversation[-12:],
+        "recent_conversation": conversation[-24:],
         "user_message": message,
     }
     response = llm.invoke(

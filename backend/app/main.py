@@ -36,6 +36,11 @@ class CloneChatRequest(BaseModel):
     conversation: list[dict[str, str]] = Field(default_factory=list)
 
 
+class VoiceSynthesisRequest(BaseModel):
+    text: str
+    profile: dict[str, object] = Field(default_factory=dict)
+
+
 app = FastAPI(
     title="Relation Slice API",
     description="Backend API for Relation Slice chat analysis.",
@@ -165,6 +170,21 @@ async def chat_cyber_clone(request: CloneChatRequest) -> dict[str, object]:
         raise HTTPException(status_code=500, detail=f"Clone chat failed: {exc}") from exc
 
     return api_success({"reply": reply})
+
+
+@app.post("/api/clone/voice", dependencies=[Depends(check_api_rate_limit)])
+async def synthesize_clone_voice(request: VoiceSynthesisRequest) -> dict[str, object]:
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="text cannot be empty")
+
+    return api_success(
+        {
+            "status": "reserved",
+            "provider": "browser-speech-fallback",
+            "audio_url": None,
+            "message": "Voice cloning model inference is reserved. The frontend can use browser speech synthesis as a fallback.",
+        }
+    )
 
 
 @app.exception_handler(HTTPException)

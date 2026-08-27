@@ -1,6 +1,7 @@
 import {
   Bot,
   BrainCircuit,
+  CalendarDays,
   Clock3,
   History,
   MessageCircle,
@@ -9,6 +10,8 @@ import {
   Trash2,
   UploadCloud,
   UserRound,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-react'
 import { type ChangeEvent, type DragEvent, type FormEvent, useState } from 'react'
@@ -26,12 +29,14 @@ type ClonePageProps = {
   status: CloneStatus
   history: CloneHistoryItem[]
   uploadProgress: number
+  voiceEnabled: boolean
   onClearFiles: () => void
   onClearHistory: () => void
   onDistill: () => void
   onFilesSelected: (files?: File[]) => void
   onSend: (message: string) => void
   onSelectHistory: (item: CloneHistoryItem) => void
+  onToggleVoice: () => void
 }
 
 const COPY = {
@@ -40,7 +45,7 @@ const COPY = {
   intro:
     '\u5148\u5bfc\u5165\u804a\u5929\u8bb0\u5f55\uff0c\u7cfb\u7edf\u4f1a\u63d0\u53d6\u8bed\u6c14\u3001\u60c5\u7eea\u8282\u594f\u548c\u5e38\u7528\u8868\u8fbe\uff0c\u751f\u6210\u4e00\u4e2a AI \u6a21\u62df\u4eba\u683c\u3002',
   dropTitle: '\u628a\u804a\u5929\u8bb0\u5f55\u653e\u5230\u8fd9\u91cc',
-  fileHint: '.db .sqlite .json .csv .txt',
+  fileHint: '.db .sqlite .json .csv .txt .png .jpg .webp',
   selectFiles: '\u9009\u62e9\u6587\u4ef6',
   clearFiles: '\u6e05\u7a7a\u6587\u4ef6',
   distill: '\u5f00\u59cb\u514b\u9686\u84b8\u998f',
@@ -60,6 +65,10 @@ const COPY = {
   historyTitle: '\u514b\u9686\u5386\u53f2',
   emptyHistory: '\u84b8\u998f\u5b8c\u6210\u540e\uff0c\u514b\u9686\u5bf9\u8bdd\u4f1a\u4fdd\u5b58\u5728\u8fd9\u91cc\u3002',
   clearHistory: '\u6e05\u7a7a',
+  voiceOn: '克隆声音已开启',
+  voiceOff: '克隆声音',
+  heatmap: '聊天频率',
+  heatmapEmpty: '开始对话后，这里会显示聊天频率。',
 }
 
 function ClonePage({
@@ -72,15 +81,18 @@ function ClonePage({
   status,
   history,
   uploadProgress,
+  voiceEnabled,
   onClearFiles,
   onClearHistory,
   onDistill,
   onFilesSelected,
   onSend,
   onSelectHistory,
+  onToggleVoice,
 }: ClonePageProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [draft, setDraft] = useState('')
+  const [showHeatmap, setShowHeatmap] = useState(false)
   const isWorking = status === 'uploading' || status === 'distilling' || status === 'chatting'
   const statusLabel = getStatusLabel(status, files.length)
   const selectedFileLabel = getSelectedFileLabel(files)
@@ -162,7 +174,7 @@ function ClonePage({
                       className="sr-only"
                       type="file"
                       multiple
-                      accept=".db,.sqlite,.sqlite3,.json,.csv,.txt"
+                      accept=".db,.sqlite,.sqlite3,.json,.csv,.txt,.png,.jpg,.jpeg,.webp,.bmp"
                       disabled={isWorking}
                       onChange={handleInputChange}
                     />
@@ -250,6 +262,26 @@ function ClonePage({
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={voiceEnabled ? 'chat-tool-button chat-tool-button-active' : 'chat-tool-button'}
+              title={voiceEnabled ? COPY.voiceOn : COPY.voiceOff}
+              aria-label={voiceEnabled ? COPY.voiceOn : COPY.voiceOff}
+              onClick={onToggleVoice}
+            >
+              {voiceEnabled ? <Volume2 size={16} strokeWidth={1.8} /> : <VolumeX size={16} strokeWidth={1.8} />}
+            </button>
+            <button
+              type="button"
+              className="chat-tool-button"
+              title={COPY.heatmap}
+              aria-label={COPY.heatmap}
+              onClick={() => setShowHeatmap(true)}
+            >
+              <CalendarDays size={16} strokeWidth={1.8} />
+            </button>
+          </div>
         </div>
 
         <div className="mt-5 flex-1 space-y-3 overflow-y-auto rounded-[26px] border border-white/45 bg-white/[0.24] p-4 dark:border-white/10 dark:bg-white/[0.04]">
@@ -294,10 +326,72 @@ function ClonePage({
             <Send size={17} strokeWidth={1.8} />
           </GlassButton>
         </form>
+
+        {showHeatmap ? <HeatmapPanel messages={messages} onClose={() => setShowHeatmap(false)} /> : null}
       </GlassCard>
       ) : null}
     </section>
   )
+}
+
+function HeatmapPanel({ messages, onClose }: { messages: CloneMessage[]; onClose: () => void }) {
+  const cells = buildHeatmap(messages)
+  const maxCount = Math.max(1, ...cells.map((cell) => cell.count))
+
+  return (
+    <div className="absolute inset-0 z-20 grid place-items-center rounded-[28px] bg-white/[0.28] p-4 backdrop-blur-xl dark:bg-black/[0.22]">
+      <div className="glass apple-panel w-full max-w-xl p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium text-[#007aff] dark:text-[#8fc2ff]">{COPY.heatmap}</p>
+            <h3 className="mt-1 text-lg font-semibold text-[rgb(var(--text-primary))]">最近 10 周对话热力</h3>
+          </div>
+          <button type="button" className="chat-tool-button" aria-label="关闭" onClick={onClose}>
+            <X size={16} strokeWidth={1.8} />
+          </button>
+        </div>
+        {messages.length ? (
+          <div className="mt-5 overflow-x-auto pb-1">
+            <div className="heatmap-grid">
+              {cells.map((cell) => (
+                <span
+                  key={cell.date}
+                  className="heatmap-cell"
+                  title={`${cell.date}: ${cell.count} messages`}
+                  style={{ opacity: cell.count ? 0.38 + (cell.count / maxCount) * 0.62 : 0.18 }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-5 rounded-[20px] bg-white/[0.28] p-4 text-sm leading-6 text-[rgb(var(--text-muted))] dark:bg-white/[0.06]">
+            {COPY.heatmapEmpty}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function buildHeatmap(messages: CloneMessage[]) {
+  const days = 70
+  const counts = new Map<string, number>()
+  for (const message of messages) {
+    const date = new Date(message.createdAt ?? new Date().toISOString())
+    if (Number.isNaN(date.getTime())) {
+      continue
+    }
+    const key = date.toISOString().slice(0, 10)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  const today = new Date()
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - (days - 1 - index))
+    const key = date.toISOString().slice(0, 10)
+    return { date: key, count: counts.get(key) ?? 0 }
+  })
 }
 
 function CloneHistoryPanel({
