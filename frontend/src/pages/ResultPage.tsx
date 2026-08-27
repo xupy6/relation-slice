@@ -30,6 +30,8 @@ type ResultPageProps = {
 
 type HeatmapRange = 'day' | 'week' | 'month' | 'year'
 type SmartInsightKey = 'dominance' | 'mood' | 'loveBrain' | 'showOff' | 'trust' | 'iq'
+type HeatmapTick = { label: string; column: number }
+type HeatmapYTick = { label: string; row: number }
 
 const heatmapRanges: Array<{ key: HeatmapRange; label: string }> = [
   { key: 'day', label: '一天' },
@@ -210,9 +212,11 @@ function ResultPage({ report, onReset }: ResultPageProps) {
         {report.chat_heatmap?.length || report.chat_hourly_heatmap?.length ? (
           <div className="mt-5 overflow-x-auto pb-1">
             <div className="activity-heatmap-wrap">
-              <div className="heatmap-y-axis">
-                {heatmapView.yLabels.map((label) => (
-                  <span key={label}>{label}</span>
+              <div className="heatmap-y-axis" style={{ gridTemplateRows: `repeat(${heatmapView.rows}, 12px)` }}>
+                {heatmapView.yLabels.map((tick) => (
+                  <span key={`${tick.label}-${tick.row}`} style={{ gridRow: tick.row + 1 }}>
+                    {tick.label}
+                  </span>
                 ))}
               </div>
               <div>
@@ -220,6 +224,7 @@ function ResultPage({ report, onReset }: ResultPageProps) {
                   className="activity-heatmap-grid"
                   style={{
                     gridTemplateRows: `repeat(${heatmapView.rows}, 12px)`,
+                    gridAutoColumns: '12px',
                   }}
                 >
               {heatmapCells.map((cell) => (
@@ -231,9 +236,11 @@ function ResultPage({ report, onReset }: ResultPageProps) {
                 />
               ))}
                 </div>
-                <div className="heatmap-x-axis" style={{ gridTemplateColumns: `repeat(${heatmapView.xLabels.length}, minmax(36px, 1fr))` }}>
-                  {heatmapView.xLabels.map((label) => (
-                    <span key={label}>{label}</span>
+                <div className="heatmap-x-axis" style={{ width: `${heatmapView.axisWidth}px` }}>
+                  {heatmapView.xLabels.map((tick) => (
+                    <span key={`${tick.label}-${tick.column}`} style={{ left: `${tick.column * 17}px` }}>
+                      {tick.label}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -634,22 +641,43 @@ function buildMbtiTraitValues(person?: LanguagePersonReport) {
 function buildHeatmapView(report: FinalReport, range: HeatmapRange) {
   if (range === 'day') {
     const cells = normalizeHourlyHeatmap(report.chat_hourly_heatmap)
+    const columns = cells.length
     return {
       cells,
+      columns,
       rows: 1,
-      xLabels: ['00:00', '06:00', '12:00', '18:00', '23:00'],
-      yLabels: ['当天'],
+      axisWidth: heatmapAxisWidth(columns),
+      xLabels: [
+        { label: '00:00', column: 0 },
+        { label: '06:00', column: 6 },
+        { label: '12:00', column: 12 },
+        { label: '18:00', column: 18 },
+        { label: '23:00', column: 23 },
+      ],
+      yLabels: [{ label: '当天', row: 0 }],
     }
   }
 
-  const days = range === 'week' ? 7 : range === 'month' ? 31 : 365
-  const cells = normalizeHeatmap(report.chat_heatmap, days)
+  const weeks = range === 'week' ? 1 : range === 'month' ? 5 : 53
+  const cells = normalizeHeatmap(report.chat_heatmap, weeks * 7)
+  const columns = Math.ceil(cells.length / 7)
   return {
     cells,
-    rows: range === 'week' ? 1 : 7,
-    xLabels: buildHeatmapXLabels(cells, range),
-    yLabels: range === 'week' ? ['近7天'] : ['一', '三', '五', '日'],
+    columns,
+    rows: 7,
+    axisWidth: heatmapAxisWidth(columns),
+    xLabels: buildHeatmapXLabels(cells, range, columns),
+    yLabels: buildHeatmapYLabels(),
   }
+}
+
+function buildHeatmapYLabels(): HeatmapYTick[] {
+  return [
+    { label: '一', row: 0 },
+    { label: '三', row: 2 },
+    { label: '五', row: 4 },
+    { label: '日', row: 6 },
+  ]
 }
 
 function normalizeHeatmap(source?: HeatmapCell[], days = 70) {
@@ -675,27 +703,32 @@ function normalizeHourlyHeatmap(source?: HeatmapCell[]) {
   }))
 }
 
-function buildHeatmapXLabels(cells: HeatmapCell[], range: HeatmapRange) {
+function buildHeatmapXLabels(cells: HeatmapCell[], range: HeatmapRange, columns: number): HeatmapTick[] {
   if (range === 'week') {
-    return cells.map((cell) => formatMonthDay(cell.date))
+    return [{ label: '近7天', column: 0 }]
   }
   if (range === 'month') {
-    return pickAxisLabels(cells, 5).map(formatMonthDay)
+    return pickAxisTicks(cells, columns, 5).map((tick) => ({ ...tick, label: formatMonthDay(tick.label) }))
   }
-  return pickAxisLabels(cells, 7).map((value) => {
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : `${date.getMonth() + 1}月`
+  return pickAxisTicks(cells, columns, 7).map((tick) => {
+    const date = new Date(tick.label)
+    return { ...tick, label: Number.isNaN(date.getTime()) ? tick.label : `${date.getMonth() + 1}月` }
   })
 }
 
-function pickAxisLabels(cells: HeatmapCell[], count: number) {
+function pickAxisTicks(cells: HeatmapCell[], columns: number, count: number): HeatmapTick[] {
   if (!cells.length) {
     return []
   }
   return Array.from({ length: count }, (_, index) => {
-    const cellIndex = Math.round((index / Math.max(1, count - 1)) * (cells.length - 1))
-    return cells[cellIndex].date
+    const column = Math.round((index / Math.max(1, count - 1)) * Math.max(0, columns - 1))
+    const cellIndex = Math.min(cells.length - 1, column * 7)
+    return { label: cells[cellIndex].date, column }
   })
+}
+
+function heatmapAxisWidth(columns: number) {
+  return Math.max(12, columns * 17 - 5)
 }
 
 function buildSmartInsights({

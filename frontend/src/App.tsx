@@ -164,6 +164,24 @@ function App() {
   }, [isMusicPlaying, musicTrackIndex])
 
   useEffect(() => {
+    if (status !== 'uploading') {
+      return
+    }
+
+    const durationMs = 5_000
+    const startedAt = window.performance.now()
+    setUploadProgress(3)
+    const timer = window.setInterval(() => {
+      const elapsed = window.performance.now() - startedAt
+      const ratio = Math.min(elapsed / durationMs, 1)
+      const eased = 1 - Math.pow(1 - ratio, 2)
+      setUploadProgress(Math.min(99, Math.round(3 + eased * 96)))
+    }, 120)
+
+    return () => window.clearInterval(timer)
+  }, [status])
+
+  useEffect(() => {
     if (status !== 'analyzing') {
       return
     }
@@ -173,9 +191,16 @@ function App() {
     setAnalysisVisualProgress(4)
     const timer = window.setInterval(() => {
       const elapsed = window.performance.now() - startedAt
-      const ratio = Math.min(elapsed / durationMs, 1)
-      const eased = 1 - Math.pow(1 - ratio, 2)
-      setAnalysisVisualProgress(Math.min(95, Math.round(4 + eased * 91)))
+      if (elapsed <= durationMs) {
+        const ratio = Math.min(elapsed / durationMs, 1)
+        const eased = 1 - Math.pow(1 - ratio, 2)
+        setAnalysisVisualProgress(Math.min(95, Math.round(4 + eased * 91)))
+        return
+      }
+
+      const slowRatio = Math.min((elapsed - durationMs) / 80_000, 1)
+      const easedSlow = 1 - Math.pow(1 - slowRatio, 3)
+      setAnalysisVisualProgress(Math.min(99, Number((95 + easedSlow * 4).toFixed(1))))
     }, 160)
 
     return () => window.clearInterval(timer)
@@ -230,14 +255,15 @@ function App() {
       setAnalysisVisualProgress(0)
       setMessageCount(0)
 
-      const upload = await uploadChatFiles(files, setUploadProgress)
+      const uploadStartedAt = window.performance.now()
+      const upload = await uploadChatFiles(files)
+      await waitForMinimumElapsed(uploadStartedAt, 5_000)
+      setUploadProgress(100)
       const uploadedMessages = upload.chat_messages
       setMessageCount(uploadedMessages.length)
 
       setStatus('analyzing')
-      const analysisStartedAt = window.performance.now()
       const rawReport = await analyzeChat(uploadedMessages)
-      await waitForMinimumElapsed(analysisStartedAt, 20_000)
       const nextReport: FinalReport = {
         ...rawReport,
         chat_heatmap: buildChatHeatmap(uploadedMessages, 365),
