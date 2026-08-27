@@ -19,11 +19,13 @@ import {
 } from './storage'
 import type {
   AnalysisHistoryItem,
+  ChatMessage,
   CloneHistoryItem,
   CloneMessage,
   CloneProfile,
   CloneStatus,
   FinalReport,
+  HeatmapCell,
   UserAccount,
   WorkStatus,
 } from './types'
@@ -101,6 +103,7 @@ function App() {
   const [files, setFiles] = useState<File[]>([])
   const [status, setStatus] = useState<WorkStatus>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [analysisVisualProgress, setAnalysisVisualProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [messageCount, setMessageCount] = useState(0)
   const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => loadHistory(currentUser?.username))
@@ -112,6 +115,7 @@ function App() {
   const [cloneStatus, setCloneStatus] = useState<CloneStatus>('idle')
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [cloneVoiceEnabled, setCloneVoiceEnabled] = useState(false)
+  const [cloneRagEnabled, setCloneRagEnabled] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [musicTrackIndex, setMusicTrackIndex] = useState(0)
   const [musicProgress, setMusicProgress] = useState(0)
@@ -159,6 +163,24 @@ function App() {
     }
   }, [isMusicPlaying, musicTrackIndex])
 
+  useEffect(() => {
+    if (status !== 'analyzing') {
+      return
+    }
+
+    const durationMs = 20_000
+    const startedAt = window.performance.now()
+    setAnalysisVisualProgress(4)
+    const timer = window.setInterval(() => {
+      const elapsed = window.performance.now() - startedAt
+      const ratio = Math.min(elapsed / durationMs, 1)
+      const eased = 1 - Math.pow(1 - ratio, 2)
+      setAnalysisVisualProgress(Math.min(95, Math.round(4 + eased * 91)))
+    }, 160)
+
+    return () => window.clearInterval(timer)
+  }, [status])
+
   function handleFilesSelected(nextFiles?: File[]) {
     if (!nextFiles?.length) {
       return
@@ -173,12 +195,14 @@ function App() {
     setCloneStatus('idle')
     setCloneError(null)
     setUploadProgress(0)
+    setAnalysisVisualProgress(0)
     setMessageCount(0)
   }
 
   function handleClearFiles() {
     setFiles([])
     setUploadProgress(0)
+    setAnalysisVisualProgress(0)
     setMessageCount(0)
     setError(null)
     setCloneError(null)
@@ -203,6 +227,7 @@ function App() {
       setError(null)
       setStatus('uploading')
       setUploadProgress(0)
+      setAnalysisVisualProgress(0)
       setMessageCount(0)
 
       const upload = await uploadChatFiles(files, setUploadProgress)
@@ -210,7 +235,13 @@ function App() {
       setMessageCount(uploadedMessages.length)
 
       setStatus('analyzing')
-      const nextReport = await analyzeChat(uploadedMessages)
+      const analysisStartedAt = window.performance.now()
+      const rawReport = await analyzeChat(uploadedMessages)
+      await waitForMinimumElapsed(analysisStartedAt, 20_000)
+      const nextReport: FinalReport = {
+        ...rawReport,
+        chat_heatmap: buildChatHeatmap(uploadedMessages),
+      }
       const item: AnalysisHistoryItem = {
         id: `${Date.now()}-${files.map((item) => item.name).join('-')}`,
         fileName: files.length === 1 ? files[0].name : `${files.length} files`,
@@ -223,10 +254,12 @@ function App() {
       setHistory((current) => [item, ...current].slice(0, 20))
       setStatus('idle')
       setUploadProgress(100)
+      setAnalysisVisualProgress(100)
       setView('result')
     } catch (nextError) {
       setError(getApiErrorMessage(nextError))
       setStatus('error')
+      setAnalysisVisualProgress(100)
     }
   }
 
@@ -346,7 +379,7 @@ function App() {
     setCloneStatus('chatting')
 
     try {
-      const response = await chatWithClone(cloneProfile, message, nextConversation)
+      const response = await chatWithClone(cloneProfile, message, nextConversation, cloneRagEnabled)
       const completedConversation: CloneMessage[] = [
         ...nextConversation,
         { role: 'clone', content: response.reply, createdAt: new Date().toISOString() },
@@ -585,6 +618,7 @@ function App() {
             messageCount={messageCount}
             status={status}
             uploadProgress={uploadProgress}
+            analysisProgress={analysisVisualProgress}
             onAnalyze={handleAnalyze}
             onClearFiles={handleClearFiles}
             onClearHistory={handleClearHistory}
@@ -603,6 +637,7 @@ function App() {
             history={cloneHistory}
             uploadProgress={uploadProgress}
             voiceEnabled={cloneVoiceEnabled}
+            ragEnabled={cloneRagEnabled}
             onClearFiles={handleClearFiles}
             onClearHistory={handleClearCloneHistory}
             onDistill={handleDistillClone}
@@ -610,6 +645,7 @@ function App() {
             onSend={handleCloneSend}
             onSelectHistory={handleSelectCloneHistory}
             onToggleVoice={() => setCloneVoiceEnabled((current) => !current)}
+            onToggleRag={() => setCloneRagEnabled((current) => !current)}
           />
         ) : (
           <ResultPage report={report} onReset={handleReset} />
@@ -799,6 +835,31 @@ function mergeFiles(current: File[], nextFiles: File[]) {
     byFingerprint.set(`${file.name}-${file.size}-${file.lastModified}`, file)
   }
   return Array.from(byFingerprint.values())
+}
+
+function buildChatHeatmap(messages: ChatMessage[], days = 70): HeatmapCell[] {
+  const counts = new Map<string, number>()
+  for (const message of messages) {
+    const date = new Date(message.timestamp)
+    if (Number.isNaN(date.getTime())) {
+      continue
+    }
+    const key = date.toISOString().slice(0, 10)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  const today = new Date()
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - (days - 1 - index))
+    const key = date.toISOString().slice(0, 10)
+    return { date: key, count: counts.get(key) ?? 0 }
+  })
+}
+
+function waitForMinimumElapsed(startedAt: number, durationMs: number) {
+  const remaining = durationMs - (window.performance.now() - startedAt)
+  return remaining > 0 ? new Promise((resolve) => window.setTimeout(resolve, remaining)) : Promise.resolve()
 }
 
 function isRelationView(view: AppView) {

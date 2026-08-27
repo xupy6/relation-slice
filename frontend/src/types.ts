@@ -82,6 +82,7 @@ export type FinalReport = {
   summary_text?: string
   fun_tags?: string[]
   all_reports?: AllReports
+  chat_heatmap?: HeatmapCell[]
 }
 
 export type WorkStatus = 'idle' | 'uploading' | 'analyzing' | 'error'
@@ -92,10 +93,27 @@ export type CloneProfile = {
   clone_name?: string
   target_sender?: string
   persona_summary?: string
+  role_card?: Record<string, unknown>
   speaking_style?: string[]
   signature_phrases?: string[]
   emotional_tone?: string
   reply_rules?: string[]
+  memory_snippets?: CloneMemorySnippet[]
+}
+
+export type CloneMemorySnippet = {
+  id?: string
+  sender?: string
+  content?: string
+  timestamp?: string
+  before?: string
+  after?: string
+  keywords?: string[]
+}
+
+export type HeatmapCell = {
+  date: string
+  count: number
 }
 
 export type CloneMessage = {

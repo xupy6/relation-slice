@@ -34,6 +34,7 @@ class CloneChatRequest(BaseModel):
     profile: dict[str, object]
     message: str
     conversation: list[dict[str, str]] = Field(default_factory=list)
+    use_rag: bool = False
 
 
 class VoiceSynthesisRequest(BaseModel):
@@ -164,7 +165,7 @@ async def chat_cyber_clone(request: CloneChatRequest) -> dict[str, object]:
         raise HTTPException(status_code=400, detail="message cannot be empty")
 
     try:
-        reply = chat_with_clone(request.profile, request.conversation, request.message.strip())
+        reply = chat_with_clone(request.profile, request.conversation, request.message.strip(), request.use_rag)
     except Exception as exc:
         logger.exception("Clone chat failed")
         raise HTTPException(status_code=500, detail=f"Clone chat failed: {exc}") from exc

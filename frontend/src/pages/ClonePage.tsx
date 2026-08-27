@@ -3,6 +3,7 @@ import {
   BrainCircuit,
   CalendarDays,
   Clock3,
+  Database,
   History,
   MessageCircle,
   Send,
@@ -30,6 +31,7 @@ type ClonePageProps = {
   history: CloneHistoryItem[]
   uploadProgress: number
   voiceEnabled: boolean
+  ragEnabled: boolean
   onClearFiles: () => void
   onClearHistory: () => void
   onDistill: () => void
@@ -37,6 +39,7 @@ type ClonePageProps = {
   onSend: (message: string) => void
   onSelectHistory: (item: CloneHistoryItem) => void
   onToggleVoice: () => void
+  onToggleRag: () => void
 }
 
 const COPY = {
@@ -67,6 +70,8 @@ const COPY = {
   clearHistory: '\u6e05\u7a7a',
   voiceOn: '克隆声音已开启',
   voiceOff: '克隆声音',
+  ragOn: 'RAG 增强已开启',
+  ragOff: 'RAG 增强',
   heatmap: '聊天频率',
   heatmapEmpty: '开始对话后，这里会显示聊天频率。',
 }
@@ -74,6 +79,8 @@ const COPY = {
 Object.assign(COPY, {
   voiceOn: '克隆声音已开启',
   voiceOff: '克隆声音',
+  ragOn: 'RAG 增强已开启',
+  ragOff: 'RAG 增强',
   heatmap: '聊天频率',
   heatmapEmpty: '开始对话后，这里会显示聊天频率。',
 })
@@ -89,6 +96,7 @@ function ClonePage({
   history,
   uploadProgress,
   voiceEnabled,
+  ragEnabled,
   onClearFiles,
   onClearHistory,
   onDistill,
@@ -96,6 +104,7 @@ function ClonePage({
   onSend,
   onSelectHistory,
   onToggleVoice,
+  onToggleRag,
 }: ClonePageProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [draft, setDraft] = useState('')
@@ -277,6 +286,15 @@ function ClonePage({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={ragEnabled ? 'chat-tool-button rag-toggle-button chat-tool-button-active' : 'chat-tool-button rag-toggle-button'}
+              title={ragEnabled ? COPY.ragOn : COPY.ragOff}
+              aria-label={ragEnabled ? COPY.ragOn : COPY.ragOff}
+              onClick={onToggleRag}
+            >
+              <Database size={15} strokeWidth={1.8} />
+            </button>
             <button
               type="button"
               className={voiceEnabled ? 'chat-tool-button chat-tool-button-active' : 'chat-tool-button'}

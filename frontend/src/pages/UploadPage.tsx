@@ -28,6 +28,7 @@ type UploadPageProps = {
   messageCount: number
   status: WorkStatus
   uploadProgress: number
+  analysisProgress: number
   onAnalyze: () => void
   onClearFiles: () => void
   onClearHistory: () => void
@@ -124,6 +125,7 @@ function UploadPage({
   messageCount,
   status,
   uploadProgress,
+  analysisProgress,
   onAnalyze,
   onClearFiles,
   onClearHistory,
@@ -134,7 +136,7 @@ function UploadPage({
   const [showExportHelp, setShowExportHelp] = useState(false)
 
   const isWorking = status === 'uploading' || status === 'analyzing'
-  const progressValue = status === 'uploading' ? uploadProgress : status === 'analyzing' ? 100 : uploadProgress
+  const progressValue = status === 'uploading' ? uploadProgress : status === 'analyzing' ? analysisProgress : uploadProgress
   const statusLabel = status === 'uploading' ? COPY.uploading : status === 'analyzing' ? COPY.analyzing : files.length ? COPY.ready : COPY.idle
   const selectedFileLabel = getSelectedFileLabel(files)
 
@@ -214,9 +216,9 @@ function UploadPage({
                 </label>
               </div>
 
-              <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/45 dark:bg-white/10">
+              <div className={status === 'analyzing' ? 'liquid-analysis-progress mt-6' : 'mt-6 h-2 overflow-hidden rounded-full bg-white/45 dark:bg-white/10'}>
                 <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300"
+                  className={status === 'analyzing' ? 'liquid-analysis-fill' : 'h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300'}
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
@@ -277,6 +279,7 @@ function UploadPage({
           fileCount={files.length}
           messageCount={messageCount}
           progressValue={progressValue}
+          isAnalyzing={status === 'analyzing'}
           statusLabel={statusLabel}
         />
       </aside>
@@ -346,11 +349,13 @@ function RelationMapPanel({
   fileCount,
   messageCount,
   progressValue,
+  isAnalyzing,
   statusLabel,
 }: {
   fileCount: number
   messageCount: number
   progressValue: number
+  isAnalyzing: boolean
   statusLabel: string
 }) {
   const hasFiles = fileCount > 0
@@ -391,12 +396,9 @@ function RelationMapPanel({
           <GraphNode className="left-[32%] bottom-[14%]" label={'\u60c5\u7eea'} active={hasFiles} color="#ff9f0a" />
           <GraphNode className="right-[30%] bottom-[14%]" label={'\u8282\u594f'} active={hasFiles} color="#34c759" />
 
-          <div
-            className="absolute inset-x-8 bottom-5 h-1.5 overflow-hidden rounded-full bg-white/50 dark:bg-white/10"
-            aria-hidden="true"
-          >
+          <div className={isAnalyzing ? 'liquid-analysis-progress absolute inset-x-8 bottom-5 h-1.5' : 'absolute inset-x-8 bottom-5 h-1.5 overflow-hidden rounded-full bg-white/50 dark:bg-white/10'} aria-hidden="true">
             <div
-              className="h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300"
+              className={isAnalyzing ? 'liquid-analysis-fill' : 'h-full rounded-full bg-[linear-gradient(90deg,#007aff,#5ac8fa,#34c759)] transition-all duration-300'}
               style={{ width: `${progressValue}%` }}
             />
           </div>

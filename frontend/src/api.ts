@@ -65,11 +65,12 @@ export async function distillClone(chatMessages: ChatMessage[]) {
   return unwrap(response.data)
 }
 
-export async function chatWithClone(profile: CloneProfile, message: string, conversation: CloneMessage[]) {
+export async function chatWithClone(profile: CloneProfile, message: string, conversation: CloneMessage[], useRag = false) {
   const response = await api.post<ApiResponse<{ reply: string }>>('/api/clone/chat', {
     profile,
     message,
     conversation,
+    use_rag: useRag,
   })
 
   return unwrap(response.data)

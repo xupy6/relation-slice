@@ -1,4 +1,4 @@
-import { RefreshCw } from 'lucide-react'
+import { CalendarDays, RefreshCw } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -20,7 +20,7 @@ import {
 } from 'recharts'
 
 import { GlassButton, GlassCard, MetricDisplay } from '../components'
-import type { FinalReport, LanguagePersonReport } from '../types'
+import type { FinalReport, HeatmapCell, LanguagePersonReport } from '../types'
 
 type ResultPageProps = {
   report: FinalReport | null
@@ -39,6 +39,9 @@ const COPY = {
   dependenceChart: '\u4f9d\u8d56\u5ea6\u5bf9\u6bd4',
   personality: '\u6027\u683c\u5149\u8c31',
   mbti: 'MBTI 判断',
+  heatmap: '聊天频率热力图',
+  heatmapHint: '最近 10 周的聊天记录密度',
+  heatmapEmpty: '这份历史报告还没有热力图数据，重新上传分析后会自动生成。',
   suggestions: '\u8da3\u5473\u5efa\u8bae',
   summary: '\u5173\u7cfb\u6458\u8981',
   stableTag: '\u7a33\u5b9a\u966a\u4f34\u578b',
@@ -108,6 +111,8 @@ function ResultPage({ report, onReset }: ResultPageProps) {
     { name: personB, value: percent(interactionReport.dependence_score?.person_b), fill: '#53d6b5' },
   ]
   const radarData = buildRadarData(languageReport.person_a, languageReport.person_b)
+  const heatmapCells = normalizeHeatmap(report.chat_heatmap)
+  const maxHeatmapCount = Math.max(1, ...heatmapCells.map((cell) => cell.count))
 
   return (
     <section className="w-full space-y-5">
@@ -135,6 +140,41 @@ function ResultPage({ report, onReset }: ResultPageProps) {
           <MetricDisplay key={metric.label} {...metric} />
         ))}
       </div>
+
+      <GlassCard className="p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-white/55 text-[#6e6e73] shadow-soft dark:bg-white/10">
+              <CalendarDays size={18} strokeWidth={1.8} />
+            </span>
+            <div>
+              <ChartTitle title={COPY.heatmap} />
+              <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{COPY.heatmapHint}</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-white/[0.42] px-3 py-1 text-xs font-semibold text-[rgb(var(--text-muted))] shadow-soft dark:bg-white/[0.08]">
+            {heatmapCells.reduce((sum, cell) => sum + cell.count, 0)} messages
+          </span>
+        </div>
+        {report.chat_heatmap?.length ? (
+          <div className="mt-5 overflow-x-auto pb-1">
+            <div className="heatmap-grid">
+              {heatmapCells.map((cell) => (
+                <span
+                  key={cell.date}
+                  className="heatmap-cell"
+                  title={`${cell.date}: ${cell.count} messages`}
+                  style={{ opacity: cell.count ? 0.32 + (cell.count / maxHeatmapCount) * 0.68 : 0.16 }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-5 rounded-[20px] bg-white/[0.28] p-4 text-sm leading-6 text-[rgb(var(--text-muted))] dark:bg-white/[0.06]">
+            {COPY.heatmapEmpty}
+          </p>
+        )}
+      </GlassCard>
 
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <GlassCard className="p-5">
@@ -292,6 +332,17 @@ function buildRadarData(personA?: LanguagePersonReport, personB?: LanguagePerson
     { label: '\u611f\u6027', personA: percent(personA?.emotionality), personB: percent(personB?.emotionality) },
     { label: '\u73a9\u5fc3', personA: percent(personA?.playfulness), personB: percent(personB?.playfulness) },
   ]
+}
+
+function normalizeHeatmap(source?: HeatmapCell[], days = 70) {
+  const counts = new Map((source ?? []).map((cell) => [cell.date, cell.count]))
+  const today = new Date()
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - (days - 1 - index))
+    const key = date.toISOString().slice(0, 10)
+    return { date: key, count: counts.get(key) ?? 0 }
+  })
 }
 
 function formatTime(value: string) {
