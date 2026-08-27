@@ -1,4 +1,5 @@
-import { CalendarDays, RefreshCw } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { Brain, CalendarDays, Frown, Gauge, RefreshCw, ShieldCheck, Smile, Sparkles } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -27,6 +28,25 @@ type ResultPageProps = {
   onReset: () => void
 }
 
+type HeatmapRange = 'day' | 'week' | 'month' | 'year'
+type SmartInsightKey = 'dominance' | 'mood' | 'loveBrain' | 'showOff' | 'trust' | 'iq'
+
+const heatmapRanges: Array<{ key: HeatmapRange; label: string }> = [
+  { key: 'day', label: '一天' },
+  { key: 'week', label: '一周' },
+  { key: 'month', label: '一月' },
+  { key: 'year', label: '一年' },
+]
+
+const smartOptions: Array<{ key: SmartInsightKey; label: string }> = [
+  { key: 'dominance', label: '攻/受分析' },
+  { key: 'mood', label: '心情分析' },
+  { key: 'loveBrain', label: '恋爱脑' },
+  { key: 'showOff', label: '嘉豪程度' },
+  { key: 'trust', label: '可信任程度' },
+  { key: 'iq', label: '智商' },
+]
+
 const COPY = {
   eyebrow: '\u5206\u6790\u7ed3\u679c',
   emptyTitle: '\u8fd8\u6ca1\u6709\u62a5\u544a',
@@ -40,8 +60,13 @@ const COPY = {
   personality: '\u6027\u683c\u5149\u8c31',
   mbti: 'MBTI 判断',
   heatmap: '聊天频率热力图',
-  heatmapHint: '最近 10 周的聊天记录密度',
+  heatmapHint: '选择一天、一周、一月或一年查看聊天密度',
   heatmapEmpty: '这份历史报告还没有热力图数据，重新上传分析后会自动生成。',
+  mbtiResult: 'MBTI 结果',
+  smartTitle: '智能分析',
+  smartHint: '勾选需要看的维度后再生成，结果页不会默认耗时计算全部内容。',
+  smartRun: '生成所选分析',
+  smartEmpty: '先选择一个或多个维度。',
   suggestions: '\u8da3\u5473\u5efa\u8bae',
   summary: '\u5173\u7cfb\u6458\u8981',
   stableTag: '\u7a33\u5b9a\u966a\u4f34\u578b',
@@ -61,6 +86,10 @@ const chartTooltipStyle = {
 }
 
 function ResultPage({ report, onReset }: ResultPageProps) {
+  const [heatmapRange, setHeatmapRange] = useState<HeatmapRange>('month')
+  const [selectedSmartKeys, setSelectedSmartKeys] = useState<SmartInsightKey[]>(['dominance', 'mood'])
+  const [hasRunSmartAnalysis, setHasRunSmartAnalysis] = useState(false)
+
   if (!report) {
     return (
       <section className="w-full">
@@ -111,8 +140,18 @@ function ResultPage({ report, onReset }: ResultPageProps) {
     { name: personB, value: percent(interactionReport.dependence_score?.person_b), fill: '#53d6b5' },
   ]
   const radarData = buildRadarData(languageReport.person_a, languageReport.person_b)
-  const heatmapCells = normalizeHeatmap(report.chat_heatmap)
+  const heatmapView = buildHeatmapView(report, heatmapRange)
+  const heatmapCells = heatmapView.cells
   const maxHeatmapCount = Math.max(1, ...heatmapCells.map((cell) => cell.count))
+  const smartInsights = buildSmartInsights({
+    personA,
+    personB,
+    languagePersonA: languageReport.person_a,
+    languagePersonB: languageReport.person_b,
+    emotionReport,
+    interactionReport,
+    intimacyScore,
+  })
 
   return (
     <section className="w-full space-y-5">
@@ -156,9 +195,33 @@ function ResultPage({ report, onReset }: ResultPageProps) {
             {heatmapCells.reduce((sum, cell) => sum + cell.count, 0)} messages
           </span>
         </div>
-        {report.chat_heatmap?.length ? (
+        <div className="heatmap-range-shell mt-5">
+          {heatmapRanges.map((range) => (
+            <button
+              key={range.key}
+              type="button"
+              className={heatmapRange === range.key ? 'heatmap-range-button heatmap-range-button-active' : 'heatmap-range-button'}
+              onClick={() => setHeatmapRange(range.key)}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+        {report.chat_heatmap?.length || report.chat_hourly_heatmap?.length ? (
           <div className="mt-5 overflow-x-auto pb-1">
-            <div className="heatmap-grid">
+            <div className="activity-heatmap-wrap">
+              <div className="heatmap-y-axis">
+                {heatmapView.yLabels.map((label) => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
+              <div>
+                <div
+                  className="activity-heatmap-grid"
+                  style={{
+                    gridTemplateRows: `repeat(${heatmapView.rows}, 12px)`,
+                  }}
+                >
               {heatmapCells.map((cell) => (
                 <span
                   key={cell.date}
@@ -167,6 +230,13 @@ function ResultPage({ report, onReset }: ResultPageProps) {
                   style={{ opacity: cell.count ? 0.32 + (cell.count / maxHeatmapCount) * 0.68 : 0.16 }}
                 />
               ))}
+                </div>
+                <div className="heatmap-x-axis" style={{ gridTemplateColumns: `repeat(${heatmapView.xLabels.length}, minmax(36px, 1fr))` }}>
+                  {heatmapView.xLabels.map((label) => (
+                    <span key={label}>{label}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -249,6 +319,95 @@ function ResultPage({ report, onReset }: ResultPageProps) {
         </GlassCard>
       </div>
 
+      <GlassCard className="p-5">
+        <ChartTitle title={COPY.mbtiResult} />
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <MbtiReportCard name={personA} person={languageReport.person_a} />
+          <MbtiReportCard name={personB} person={languageReport.person_b} />
+        </div>
+      </GlassCard>
+
+      <GlassCard className="p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-[16px] bg-white/55 text-[#6e6e73] shadow-soft dark:bg-white/10">
+                <Sparkles size={18} strokeWidth={1.8} />
+              </span>
+              <div>
+                <ChartTitle title={COPY.smartTitle} />
+                <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{COPY.smartHint}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {smartOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={selectedSmartKeys.includes(option.key) ? 'smart-option smart-option-active' : 'smart-option'}
+                  onClick={() => {
+                    setHasRunSmartAnalysis(false)
+                    setSelectedSmartKeys((current) =>
+                      current.includes(option.key) ? current.filter((key) => key !== option.key) : [...current, option.key],
+                    )
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <GlassButton
+            className="primary-gradient-button inline-flex min-h-11 items-center justify-center gap-2 px-5 py-3 text-sm font-semibold"
+            disabled={!selectedSmartKeys.length}
+            onClick={() => setHasRunSmartAnalysis(true)}
+          >
+            <Gauge size={16} strokeWidth={1.8} />
+            {COPY.smartRun}
+          </GlassButton>
+        </div>
+
+        {hasRunSmartAnalysis && selectedSmartKeys.length ? (
+          <div className="mt-5 grid gap-4">
+            {selectedSmartKeys.includes('dominance') ? (
+              <SmartTwinPanel
+                icon={<Brain size={17} strokeWidth={1.8} />}
+                title="攻/受分析"
+                left={smartInsights.dominance.personA}
+                right={smartInsights.dominance.personB}
+                leftName={personA}
+                rightName={personB}
+                minLabel="攻"
+                maxLabel="受"
+              />
+            ) : null}
+            {selectedSmartKeys.includes('mood') ? (
+              <SmartTwinPanel
+                icon={<Smile size={17} strokeWidth={1.8} />}
+                title="心情分析"
+                left={smartInsights.mood.personA}
+                right={smartInsights.mood.personB}
+                leftName={personA}
+                rightName={personB}
+                minLabel="笑脸"
+                maxLabel="哭脸"
+                maxIcon={<Frown size={15} strokeWidth={1.8} />}
+              />
+            ) : null}
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {selectedSmartKeys.includes('loveBrain') ? <SmartMeter title="恋爱脑分析" value={smartInsights.loveBrain} /> : null}
+              {selectedSmartKeys.includes('showOff') ? <SmartMeter title="嘉豪程度分析" value={smartInsights.showOff} /> : null}
+              {selectedSmartKeys.includes('trust') ? <SmartMeter title="可信任程度分析" value={smartInsights.trust} icon={<ShieldCheck size={16} strokeWidth={1.8} />} /> : null}
+              {selectedSmartKeys.includes('iq') ? <SmartMeter title="智商分析" value={smartInsights.iq} icon={<Brain size={16} strokeWidth={1.8} />} /> : null}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-5 rounded-[20px] bg-white/[0.28] p-4 text-sm leading-6 text-[rgb(var(--text-muted))] dark:bg-white/[0.06]">
+            {selectedSmartKeys.length ? COPY.smartHint : COPY.smartEmpty}
+          </p>
+        )}
+      </GlassCard>
+
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <GlassCard className="p-6">
           <ChartTitle title={COPY.summary} />
@@ -281,6 +440,134 @@ function MbtiBadge({ name, value }: { name: string; value?: string }) {
     <div className="rounded-[18px] bg-white/[0.28] px-4 py-3 shadow-soft dark:bg-white/[0.06]">
       <p className="text-xs font-medium text-[rgb(var(--text-muted))]">{name}</p>
       <p className="mt-1 text-sm font-semibold text-[rgb(var(--text-primary))]">MBTI: {value || '观察中'}</p>
+    </div>
+  )
+}
+
+function MbtiReportCard({ name, person }: { name: string; person?: LanguagePersonReport }) {
+  const values = buildMbtiTraitValues(person)
+  return (
+    <div className="mbti-report-card">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium text-[rgb(var(--text-muted))]">{name}</p>
+          <h3 className="mt-1 text-2xl font-semibold leading-tight text-[rgb(var(--text-primary))]">{person?.mbti || '观察中'}</h3>
+        </div>
+        <span className="rounded-full bg-white/[0.72] px-3 py-1 text-xs font-semibold text-[rgb(var(--text-muted))]">
+          MBTI
+        </span>
+      </div>
+      <div className="mt-5 grid gap-5">
+        {values.map((trait) => (
+          <MbtiTraitSlider key={trait.label} {...trait} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MbtiTraitSlider({ left, right, value, label }: { left: string; right: string; value: number; label: string }) {
+  return (
+    <div>
+      <div className="mbti-trait-labels">
+        <span>{left}</span>
+        <span>{label}</span>
+        <span>{right}</span>
+      </div>
+      <div className="mbti-trait-track" aria-label={label}>
+        <span className="mbti-trait-midline" />
+        <span className="mbti-trait-fill" style={{ width: `${value}%` }} />
+        <span className="mbti-trait-thumb" style={{ left: `${value}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function SmartTwinPanel({
+  icon,
+  left,
+  leftName,
+  maxIcon,
+  maxLabel,
+  minLabel,
+  right,
+  rightName,
+  title,
+}: {
+  icon: ReactNode
+  left: number
+  leftName: string
+  maxIcon?: ReactNode
+  maxLabel: string
+  minLabel: string
+  right: number
+  rightName: string
+  title: string
+}) {
+  return (
+    <div className="smart-panel">
+      <div className="flex items-center gap-2">
+        <span className="smart-panel-icon">{icon}</span>
+        <h3 className="text-sm font-semibold text-[rgb(var(--text-primary))]">{title}</h3>
+      </div>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <SmartPersonScale name={leftName} value={left} minLabel={minLabel} maxLabel={maxLabel} maxIcon={maxIcon} />
+        <SmartPersonScale name={rightName} value={right} minLabel={minLabel} maxLabel={maxLabel} maxIcon={maxIcon} />
+      </div>
+    </div>
+  )
+}
+
+function SmartPersonScale({
+  maxIcon,
+  maxLabel,
+  minLabel,
+  name,
+  value,
+}: {
+  maxIcon?: ReactNode
+  maxLabel: string
+  minLabel: string
+  name: string
+  value: number
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="truncate text-sm font-semibold text-[rgb(var(--text-primary))]">{name}</p>
+        <p className="text-xs font-medium text-[rgb(var(--text-muted))]">{value}%</p>
+      </div>
+      <div className="smart-scale-labels">
+        <span>{minLabel}</span>
+        <span className="inline-flex items-center gap-1">
+          {maxIcon}
+          {maxLabel}
+        </span>
+      </div>
+      <div className="smart-meter-track">
+        <span className="smart-meter-fill" style={{ width: `${value}%` }} />
+        <span className="smart-meter-thumb" style={{ left: `${value}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function SmartMeter({ icon, title, value }: { icon?: ReactNode; title: string; value: number }) {
+  return (
+    <div className="smart-meter-card">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-[rgb(var(--text-primary))]">{title}</p>
+        {icon ? <span className="text-[rgb(var(--text-muted))]">{icon}</span> : null}
+      </div>
+      <div className="smart-scale-labels">
+        <span>0%</span>
+        <span>100%</span>
+      </div>
+      <div className="smart-meter-track">
+        <span className="smart-meter-fill" style={{ width: `${value}%` }} />
+        <span className="smart-meter-thumb" style={{ left: `${value}%` }} />
+      </div>
+      <p className="mt-3 text-right text-xs font-semibold text-[rgb(var(--text-muted))]">{value}%</p>
     </div>
   )
 }
@@ -334,6 +621,37 @@ function buildRadarData(personA?: LanguagePersonReport, personB?: LanguagePerson
   ]
 }
 
+function buildMbtiTraitValues(person?: LanguagePersonReport) {
+  const mbti = (person?.mbti || '').toUpperCase()
+  return [
+    { left: 'I', right: 'E', label: 'I / E', value: mbti.includes('E') ? 68 : mbti.includes('I') ? 32 : percent(person?.extroversion) },
+    { left: 'S', right: 'N', label: 'S / N', value: mbti.includes('N') ? 64 : mbti.includes('S') ? 36 : percent(person?.playfulness) },
+    { left: 'T', right: 'F', label: 'T / F', value: mbti.includes('F') ? 66 : mbti.includes('T') ? 34 : 100 - percent(person?.rationality) },
+    { left: 'J', right: 'P', label: 'J / P', value: mbti.includes('P') ? 62 : mbti.includes('J') ? 38 : percent(person?.playfulness) },
+  ].map((trait) => ({ ...trait, value: clamp(trait.value, 8, 92) }))
+}
+
+function buildHeatmapView(report: FinalReport, range: HeatmapRange) {
+  if (range === 'day') {
+    const cells = normalizeHourlyHeatmap(report.chat_hourly_heatmap)
+    return {
+      cells,
+      rows: 1,
+      xLabels: ['00:00', '06:00', '12:00', '18:00', '23:00'],
+      yLabels: ['当天'],
+    }
+  }
+
+  const days = range === 'week' ? 7 : range === 'month' ? 31 : 365
+  const cells = normalizeHeatmap(report.chat_heatmap, days)
+  return {
+    cells,
+    rows: range === 'week' ? 1 : 7,
+    xLabels: buildHeatmapXLabels(cells, range),
+    yLabels: range === 'week' ? ['近7天'] : ['一', '三', '五', '日'],
+  }
+}
+
 function normalizeHeatmap(source?: HeatmapCell[], days = 70) {
   const counts = new Map((source ?? []).map((cell) => [cell.date, cell.count]))
   const today = new Date()
@@ -345,12 +663,101 @@ function normalizeHeatmap(source?: HeatmapCell[], days = 70) {
   })
 }
 
+function normalizeHourlyHeatmap(source?: HeatmapCell[]) {
+  if (source?.length) {
+    return source.slice(0, 24)
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  return Array.from({ length: 24 }, (_, hour) => ({
+    date: `${today}T${String(hour).padStart(2, '0')}:00`,
+    count: 0,
+  }))
+}
+
+function buildHeatmapXLabels(cells: HeatmapCell[], range: HeatmapRange) {
+  if (range === 'week') {
+    return cells.map((cell) => formatMonthDay(cell.date))
+  }
+  if (range === 'month') {
+    return pickAxisLabels(cells, 5).map(formatMonthDay)
+  }
+  return pickAxisLabels(cells, 7).map((value) => {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? value : `${date.getMonth() + 1}月`
+  })
+}
+
+function pickAxisLabels(cells: HeatmapCell[], count: number) {
+  if (!cells.length) {
+    return []
+  }
+  return Array.from({ length: count }, (_, index) => {
+    const cellIndex = Math.round((index / Math.max(1, count - 1)) * (cells.length - 1))
+    return cells[cellIndex].date
+  })
+}
+
+function buildSmartInsights({
+  emotionReport,
+  interactionReport,
+  intimacyScore,
+  languagePersonA,
+  languagePersonB,
+}: {
+  personA: string
+  personB: string
+  languagePersonA?: LanguagePersonReport
+  languagePersonB?: LanguagePersonReport
+  emotionReport: { positive_ratio?: number; negative_ratio?: number; neutral_ratio?: number }
+  interactionReport: {
+    dependence_score?: { person_a?: number; person_b?: number }
+    initiation_ratio?: { person_a?: number; person_b?: number }
+    tacit_score?: number
+  }
+  intimacyScore: number
+}) {
+  const positive = percent(emotionReport.positive_ratio)
+  const negative = percent(emotionReport.negative_ratio)
+  const tacit = percent(interactionReport.tacit_score)
+  const dependenceA = percent(interactionReport.dependence_score?.person_a)
+  const dependenceB = percent(interactionReport.dependence_score?.person_b)
+  const initiationA = percent(interactionReport.initiation_ratio?.person_a)
+  const initiationB = percent(interactionReport.initiation_ratio?.person_b)
+  const rationality = Math.round(average([languagePersonA?.rationality, languagePersonB?.rationality]) * 100)
+  const playfulness = Math.round(average([languagePersonA?.playfulness, languagePersonB?.playfulness]) * 100)
+  const extroversion = Math.round(average([languagePersonA?.extroversion, languagePersonB?.extroversion]) * 100)
+
+  return {
+    dominance: {
+      personA: clamp(Math.round(100 - initiationA * 0.55 - dependenceA * 0.25 + dependenceB * 0.2), 0, 100),
+      personB: clamp(Math.round(100 - initiationB * 0.55 - dependenceB * 0.25 + dependenceA * 0.2), 0, 100),
+    },
+    mood: {
+      personA: clamp(Math.round(negative * 0.7 + (100 - positive) * 0.25), 0, 100),
+      personB: clamp(Math.round(negative * 0.7 + (100 - positive) * 0.25), 0, 100),
+    },
+    loveBrain: clamp(Math.round(intimacyScore * 0.48 + average([dependenceA, dependenceB]) * 0.34 + tacit * 0.18), 0, 100),
+    showOff: clamp(Math.round(extroversion * 0.42 + playfulness * 0.36 + rationality * 0.12), 0, 100),
+    trust: clamp(Math.round(positive * 0.36 + tacit * 0.34 + intimacyScore * 0.2 + rationality * 0.1), 0, 100),
+    iq: clamp(Math.round(rationality * 0.7 + tacit * 0.2 + positive * 0.1), 0, 100),
+  }
+}
+
 function formatTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     return value
   }
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function formatMonthDay(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+  return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
 function pad(value: number) {

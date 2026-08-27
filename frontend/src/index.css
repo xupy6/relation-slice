@@ -282,17 +282,38 @@ button {
 }
 
 .rag-toggle-button {
+  position: relative;
+  overflow: hidden;
   color: rgba(54, 59, 69, 0.74);
 }
 
 .rag-toggle-button.chat-tool-button-active {
-  color: rgba(18, 22, 30, 0.9);
+  color: rgba(18, 22, 30, 0.92);
   background:
-    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.96), transparent 38%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(226, 229, 234, 0.58));
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.98), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(214, 232, 255, 0.78) 46%, rgba(255, 226, 238, 0.72)),
+    linear-gradient(90deg, rgba(180, 220, 255, 0.55), rgba(255, 224, 238, 0.5));
+  background-size: 120% 120%, 220% 220%, 180% 180%;
   box-shadow:
-    0 12px 28px rgba(37, 47, 70, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    0 14px 32px rgba(37, 47, 70, 0.18),
+    0 0 24px rgba(118, 178, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  animation: ragLiquidShift 4.8s ease-in-out infinite;
+}
+
+.rag-toggle-dot {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(142, 142, 147, 0.42);
+}
+
+.rag-toggle-button.chat-tool-button-active .rag-toggle-dot {
+  background: rgba(52, 199, 89, 0.9);
+  box-shadow: 0 0 10px rgba(52, 199, 89, 0.52);
 }
 
 .liquid-analysis-progress {
@@ -353,6 +374,222 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
     0 3px 8px rgba(37, 47, 70, 0.08);
+}
+
+.heatmap-range-shell {
+  display: inline-flex;
+  gap: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.36);
+  box-shadow:
+    0 10px 26px rgba(37, 47, 70, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+}
+
+.heatmap-range-button {
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 13px;
+  color: rgb(var(--text-muted));
+  font-size: 12px;
+  font-weight: 650;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.heatmap-range-button:hover,
+.heatmap-range-button-active {
+  transform: translateY(-1px);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.98), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(226, 232, 240, 0.58));
+  color: rgb(var(--text-primary));
+  box-shadow:
+    0 8px 20px rgba(37, 47, 70, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.activity-heatmap-wrap {
+  display: grid;
+  grid-template-columns: 34px max-content;
+  gap: 10px;
+  align-items: start;
+}
+
+.activity-heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 12px;
+  gap: 5px;
+  width: max-content;
+}
+
+.heatmap-y-axis {
+  display: grid;
+  min-height: 12px;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 5px;
+  color: rgb(var(--text-muted));
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.heatmap-y-axis span {
+  min-height: 12px;
+}
+
+.heatmap-x-axis {
+  display: grid;
+  width: 100%;
+  min-width: 180px;
+  margin-top: 8px;
+  color: rgb(var(--text-muted));
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.heatmap-x-axis span {
+  white-space: nowrap;
+}
+
+.mbti-report-card {
+  border: 1px solid rgba(232, 235, 240, 0.86);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.mbti-trait-labels,
+.smart-scale-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(28, 32, 38, 0.78);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.mbti-trait-labels span:nth-child(2) {
+  color: rgba(116, 125, 139, 0.92);
+  font-size: 11px;
+}
+
+.mbti-trait-track {
+  position: relative;
+  height: 16px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 229, 234, 0.84);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(238, 240, 244, 0.78) 0 49.6%, rgba(255, 255, 255, 0.92) 50.4% 100%),
+    rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+}
+
+.mbti-trait-midline {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: rgba(116, 125, 139, 0.28);
+}
+
+.mbti-trait-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(142, 142, 147, 0.34), rgba(160, 196, 232, 0.34)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), transparent);
+}
+
+.mbti-trait-thumb,
+.smart-meter-thumb {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 4px 12px rgba(37, 47, 70, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translate(-50%, -50%);
+}
+
+.smart-option {
+  min-height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+  padding: 0 13px;
+  color: rgb(var(--text-muted));
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.smart-option:hover,
+.smart-option-active {
+  transform: translateY(-1px);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.96), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(226, 232, 240, 0.48));
+  color: rgb(var(--text-primary));
+}
+
+.smart-panel,
+.smart-meter-card {
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.32);
+  padding: 16px;
+  box-shadow:
+    0 12px 30px rgba(37, 47, 70, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.smart-panel-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.48);
+  color: rgb(var(--text-muted));
+}
+
+.smart-meter-track {
+  position: relative;
+  height: 12px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.78),
+    inset 0 -1px 4px rgba(37, 47, 70, 0.08);
+}
+
+.smart-meter-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, rgba(142, 142, 147, 0.42), rgba(196, 218, 238, 0.52), rgba(255, 220, 232, 0.44)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.36), transparent);
 }
 
 .nav-shell {
@@ -695,6 +932,17 @@ button {
   }
 }
 
+@keyframes ragLiquidShift {
+  0%,
+  100% {
+    background-position: 0% 0%, 0% 50%, 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 100%, 100% 50%, 100% 50%;
+  }
+}
+
 .more-trigger,
 .more-menu,
 .contact-link {
@@ -910,12 +1158,14 @@ button {
   }
 
   .rag-toggle-button.chat-tool-button-active {
-    color: rgba(244, 247, 251, 0.92);
+    color: rgba(244, 247, 251, 0.94);
     background:
-      radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.18), transparent 38%),
-      linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(170, 176, 188, 0.12));
+      radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.2), transparent 34%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(92, 160, 255, 0.18) 46%, rgba(255, 132, 180, 0.14)),
+      linear-gradient(90deg, rgba(180, 220, 255, 0.14), rgba(255, 224, 238, 0.12));
     box-shadow:
       0 12px 28px rgba(0, 0, 0, 0.26),
+      0 0 22px rgba(92, 160, 255, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
 
@@ -935,6 +1185,56 @@ button {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.18),
       0 0 18px rgba(218, 221, 226, 0.08);
+  }
+
+  .heatmap-range-shell,
+  .smart-panel,
+  .smart-meter-card {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 12px 30px rgba(0, 0, 0, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .heatmap-range-button:hover,
+  .heatmap-range-button-active,
+  .smart-option:hover,
+  .smart-option-active {
+    background:
+      radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.18), transparent 34%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(146, 154, 168, 0.1));
+  }
+
+  .mbti-report-card {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .mbti-trait-labels,
+  .smart-scale-labels {
+    color: rgba(244, 247, 251, 0.72);
+  }
+
+  .mbti-trait-track {
+    border-color: rgba(255, 255, 255, 0.12);
+    background:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 49.6%, rgba(255, 255, 255, 0.12) 50.4% 100%),
+      rgba(255, 255, 255, 0.06);
+  }
+
+  .mbti-trait-fill,
+  .smart-meter-fill {
+    background:
+      linear-gradient(90deg, rgba(146, 154, 168, 0.24), rgba(92, 160, 255, 0.16), rgba(255, 132, 180, 0.12)),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.12), transparent);
+  }
+
+  .mbti-trait-thumb,
+  .smart-meter-thumb {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(244, 247, 251, 0.82);
   }
 
   .auth-input,

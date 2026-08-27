@@ -294,6 +294,7 @@ function ClonePage({
               onClick={onToggleRag}
             >
               <Database size={15} strokeWidth={1.8} />
+              <span className="rag-toggle-dot" aria-hidden="true" />
             </button>
             <button
               type="button"

@@ -240,7 +240,8 @@ function App() {
       await waitForMinimumElapsed(analysisStartedAt, 20_000)
       const nextReport: FinalReport = {
         ...rawReport,
-        chat_heatmap: buildChatHeatmap(uploadedMessages),
+        chat_heatmap: buildChatHeatmap(uploadedMessages, 365),
+        chat_hourly_heatmap: buildHourlyHeatmap(uploadedMessages),
       }
       const item: AnalysisHistoryItem = {
         id: `${Date.now()}-${files.map((item) => item.name).join('-')}`,
@@ -853,6 +854,28 @@ function buildChatHeatmap(messages: ChatMessage[], days = 70): HeatmapCell[] {
     const date = new Date(today)
     date.setDate(today.getDate() - (days - 1 - index))
     const key = date.toISOString().slice(0, 10)
+    return { date: key, count: counts.get(key) ?? 0 }
+  })
+}
+
+function buildHourlyHeatmap(messages: ChatMessage[]): HeatmapCell[] {
+  const parsedDates = messages
+    .map((message) => new Date(message.timestamp))
+    .filter((date) => !Number.isNaN(date.getTime()))
+  const latest = parsedDates.length ? new Date(Math.max(...parsedDates.map((date) => date.getTime()))) : new Date()
+  const targetKey = latest.toISOString().slice(0, 10)
+  const counts = new Map<string, number>()
+
+  for (const date of parsedDates) {
+    if (date.toISOString().slice(0, 10) !== targetKey) {
+      continue
+    }
+    const hourKey = `${targetKey}T${String(date.getHours()).padStart(2, '0')}:00`
+    counts.set(hourKey, (counts.get(hourKey) ?? 0) + 1)
+  }
+
+  return Array.from({ length: 24 }, (_, hour) => {
+    const key = `${targetKey}T${String(hour).padStart(2, '0')}:00`
     return { date: key, count: counts.get(key) ?? 0 }
   })
 }

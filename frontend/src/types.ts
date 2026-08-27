@@ -83,6 +83,7 @@ export type FinalReport = {
   fun_tags?: string[]
   all_reports?: AllReports
   chat_heatmap?: HeatmapCell[]
+  chat_hourly_heatmap?: HeatmapCell[]
 }
 
 export type WorkStatus = 'idle' | 'uploading' | 'analyzing' | 'error'
