@@ -36,9 +36,9 @@ type RelationSubView = 'upload' | 'result'
 type CloneSubView = 'cloneUpload' | 'cloneChat'
 
 const MUSIC_TRACKS = [
-  { title: 'Sunny Day', src: '/music/%E6%99%B4%E5%A4%A9-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3' },
-  { title: 'Love Confession', src: '/music/%E5%91%8A%E7%99%BD%E6%B0%94%E7%90%83-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3' },
-  { title: 'Cold City', src: '/music/%E4%BB%BB%E7%84%B6%2B-%2B%E5%87%89%E5%9F%8E.mp3' },
+  { title: 'Sunny Day', src: `${import.meta.env.BASE_URL}music/%E6%99%B4%E5%A4%A9-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3` },
+  { title: 'Love Confession', src: `${import.meta.env.BASE_URL}music/%E5%91%8A%E7%99%BD%E6%B0%94%E7%90%83-%E5%91%A8%E6%9D%B0%E4%BC%A6.mp3` },
+  { title: 'Cold City', src: `${import.meta.env.BASE_URL}music/%E4%BB%BB%E7%84%B6%2B-%2B%E5%87%89%E5%9F%8E.mp3` },
 ]
 
 const COPY = {
@@ -758,7 +758,7 @@ function App() {
               </div>
             ) : (
               <div className="mt-6 overflow-hidden rounded-[28px] border border-white/60 bg-white/[0.42] p-3 shadow-soft dark:border-white/10 dark:bg-white/[0.08]">
-                <img className="mx-auto max-h-[62vh] w-full rounded-[22px] object-contain" src="/picture/reward.png" alt={COPY.reward} />
+                <img className="mx-auto max-h-[62vh] w-full rounded-[22px] object-contain" src={`${import.meta.env.BASE_URL}picture/reward.png`} alt={COPY.reward} />
               </div>
             )}
           </div>
