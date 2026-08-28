@@ -376,6 +376,97 @@ button {
     0 3px 8px rgba(37, 47, 70, 0.08);
 }
 
+.clone-heatmap-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 40;
+  width: min(540px, calc(100vw - 48px));
+  padding: 18px;
+  overflow: visible;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.92), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(245, 248, 252, 0.44) 52%, rgba(235, 244, 255, 0.34));
+  box-shadow:
+    0 24px 70px rgba(37, 47, 70, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.clone-heatmap-popover::before {
+  position: absolute;
+  top: -6px;
+  right: 62px;
+  width: 14px;
+  height: 14px;
+  content: '';
+  border-top: 1px solid rgba(255, 255, 255, 0.68);
+  border-left: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.7);
+  transform: rotate(45deg);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+}
+
+.clone-heatmap-popover > * {
+  position: relative;
+  z-index: 1;
+}
+
+.clone-heatmap-scroll {
+  overflow-x: auto;
+}
+
+.clone-heatmap-wrap {
+  display: grid;
+  grid-template-columns: 42px max-content;
+  gap: 10px;
+  align-items: start;
+  min-width: max-content;
+}
+
+.clone-heatmap-grid {
+  display: grid;
+  gap: 5px;
+  width: max-content;
+}
+
+.clone-heatmap-y-axis {
+  display: grid;
+  gap: 5px;
+  color: rgb(var(--text-muted));
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.clone-heatmap-y-axis span {
+  min-height: 12px;
+  text-align: right;
+}
+
+.clone-heatmap-x-axis {
+  position: relative;
+  height: 18px;
+  margin-top: 8px;
+  color: rgb(var(--text-muted));
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.clone-heatmap-x-axis span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  transform: translateX(-2px);
+}
+
+.clone-heatmap-note {
+  margin-top: 10px;
+  color: rgb(var(--text-muted));
+  font-size: 11px;
+  line-height: 18px;
+}
+
 .heatmap-range-shell {
   display: inline-flex;
   gap: 5px;
@@ -1208,6 +1299,21 @@ button {
     box-shadow:
       0 12px 30px rgba(0, 0, 0, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .clone-heatmap-popover {
+    border-color: rgba(255, 255, 255, 0.14);
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.14), transparent 30%),
+      linear-gradient(145deg, rgba(34, 40, 52, 0.9), rgba(20, 25, 34, 0.72) 52%, rgba(32, 42, 58, 0.58));
+    box-shadow:
+      0 24px 70px rgba(0, 0, 0, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .clone-heatmap-popover::before {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(34, 40, 52, 0.88);
   }
 
   .heatmap-range-button:hover,
