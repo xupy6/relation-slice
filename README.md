@@ -1,8 +1,8 @@
-# 消失的TA / Relation Slice
+# 消失的TA
 
-消失的TA是一个聊天记录关系分析与赛博克隆 Web 应用。用户上传微信聊天记录数据库、WeChatMsg 导出文件、普通 JSON/CSV/TXT，或聊天截图后，后端会统一解析为标准消息，再通过 DeepSeek + LangGraph 多 Agent 流水线生成关系报告；前端使用 React + Tailwind + Recharts 呈现苹果极简液态玻璃风格的可视化界面。
+消失的TA是一个聊天记录关系分析与蒸馏赛博克隆 Web 应用。用户上传微信聊天记录数据库、WeChatMsg 导出文件、普通 JSON/CSV/TXT，或聊天截图后，后端会统一解析为标准消息，再通过 DeepSeek + LangGraph 多 Agent 流水线生成关系报告；前端使用 React + Tailwind + Recharts 呈现苹果极简液态玻璃风格的可视化界面。
 
-当前仓库面向本地开发和后续上线准备，Docker 部署暂列为未来工作。
+当前仓库面向本地开发和后续上线准备。
 
 ## 当前能力
 
